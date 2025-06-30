@@ -6,7 +6,7 @@ import java.net.Socket;
 import announcements.ListClientsFiles;
 import database.Manager_db;
 import universal.CommunicateManager;
-import universal.ConverterFilesIngormationToJson;
+import universal.ConverterClassToJson;
 
 
 public class UserHandling implements Runnable {
@@ -23,8 +23,11 @@ public class UserHandling implements Runnable {
     public void run() {
         System.out.println("UserHandling started o adrersie" + socket.getInetAddress());
 
-        String initJsonFromClient =  communicateManager.receiveCommunicate();
-        ListClientsFiles comunicate = ConverterFilesIngormationToJson.restoreInitClientToServer(initJsonFromClient);
+        String initJsonFromClient = communicateManager.receiveCommunicate();
+        System.out.println("Dane logowania klienta: " + initJsonFromClient);
+
+        String filesListJsonFromClient =  communicateManager.receiveCommunicate();
+        ListClientsFiles comunicate = ConverterClassToJson.restoreFileInformation(filesListJsonFromClient);
 
         System.out.println("Pierwszy komunikat:\n" + comunicate);
 

@@ -9,16 +9,17 @@ import java.util.List;
 import java.util.Scanner;
 
 import announcements.FileInformation;
+import announcements.InitClientToServer;
 import announcements.ListClientsFiles;
 import universal.CommunicateManager;
-import universal.ConverterFilesIngormationToJson;
+import universal.ConverterClassToJson;
 import universal.FileManager;
 
 public class Client {
     Socket socket = null;
     CommunicateManager communicateManager;
 
-    public boolean loginToServer() {
+    public boolean connectToServer() {
         Scanner scanner = new Scanner(System.in);
 
         while (socket == null || !socket.isConnected()) {
@@ -47,11 +48,43 @@ public class Client {
         return true;
     }
 
+    private boolean loginToServer( ) {
+        InitClientToServer initClientToServer = new InitClientToServer();
+
+        System.out.print("Podaj swój ID: ");
+        Scanner scanner = new Scanner(System.in);
+        try {
+            initClientToServer.ID = Long.parseLong(scanner.nextLine());
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
+
+
+        System.out.print("Podaj scieżkę swojego katalogu: ");
+        initClientToServer.pathClientArchive = scanner.nextLine();
+
+        // TODO: usunąc po testach
+        initClientToServer.ID  = 1;
+        initClientToServer.pathClientArchive = "/";
+
+        String loginDataJson = ConverterClassToJson.convert(initClientToServer);
+        communicateManager.sendCommunicate(loginDataJson);
+
+
+        return true;
+    }
 
     public static void main(String[] args) {
         Client client = new Client();
 
-        client.loginToServer();
+        client.connectToServer();
+
+        while (!client.loginToServer()) {
+            System.out.println("\tBłędne dane logowania\n\tPonownie wprowadź dane");
+        }
+        System.out.println("\tPoprawnie zalogowano na serwer");
+
 
 
         FileManager fileManager = new FileManager("client_data");
@@ -61,13 +94,15 @@ public class Client {
         System.out.println("Twoja lista plików:\n");
         Client.printList(informationFiles);
 
+
+
         ListClientsFiles firstCommunicate = new ListClientsFiles();
         try {
             InetAddress localHost = InetAddress.getLocalHost();
             firstCommunicate.IP  = localHost.getHostAddress();
             firstCommunicate.filesInformation = informationFiles;
 
-            String jsonToSEND = ConverterFilesIngormationToJson.convertInitClientToServer(firstCommunicate);
+            String jsonToSEND = ConverterClassToJson.convert(firstCommunicate);
             client.communicateManager.sendCommunicate(jsonToSEND);
 
 

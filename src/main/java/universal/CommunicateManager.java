@@ -20,7 +20,7 @@ public class CommunicateManager {
         }
     }
     public String receiveCommunicate() {
-        String json = null;
+        String json ;
         try {
             json = reader.readLine();
         } catch (IOException e) {
