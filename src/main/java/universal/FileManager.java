@@ -1,8 +1,8 @@
+package universal;
+
 import announcements.FileInformation;
 import announcements.InitClientToServer;
 import announcements.TypeOfFile;
-import com.google.gson.Gson;
-import server.Server;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.List;
 public class FileManager {
     private final String file_path;
 
-    FileManager(String file_path) {
+    public FileManager(String file_path) {
         this.file_path = file_path;
     }
 
@@ -33,17 +33,32 @@ public class FileManager {
     }
 
 
-    private  List<FileInformation> getListOfFilesInformation() {
+    public List<FileInformation> getListOfFilesInformation() {
         File[] entries = getListOfFiles();
         if (entries == null) {
             return null;
         }
+
         List<FileInformation> list = new ArrayList<>();
         for (File entry : entries) {
-            FileInformation information = getInformationFromFile(entry);
-            list.add(information);
+            addFileAndSubfiles(entry, list);
         }
+
         return list;
+    }
+
+    private void addFileAndSubfiles(File file, List<FileInformation> list) {
+        FileInformation information = getInformationFromFile(file);
+        list.add(information);
+
+        if (file.isDirectory()) {
+            File[] subEntries = file.listFiles();
+            if (subEntries != null) {
+                for (File subFile : subEntries) {
+                    addFileAndSubfiles(subFile, list); // rekurencja
+                }
+            }
+        }
     }
 
     private FileInformation getInformationFromFile(File file) {
@@ -74,12 +89,7 @@ public class FileManager {
         initClientToServer.IP = "127.0.0.1";
         initClientToServer.filesInformation = info;
 
-//        Gson gson = new Gson();
-//
-//        String json = gson.toJson(initClientToServer);
-//        System.out.println("Zostanie wysłane:\n" + json);
-//        InitClientToServer otrzymane = gson.fromJson(json, InitClientToServer.class);
-//        System.out.println("Otrzymałem \n" + otrzymane.IP + "\n" + otrzymane.filesInformation);
+
     }
 
 }

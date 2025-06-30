@@ -11,6 +11,6 @@ public class FileInformation {
 
     @Override
     public String toString() {
-        return fileType + fileName + "  " + filePath + "  " + modfiferTime + "  " + fileSize;
+        return fileType + "  " + fileName + "  " + filePath + "  " + modfiferTime + "  " + fileSize;
     }
 }
