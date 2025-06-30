@@ -54,6 +54,7 @@ public class Client {
     private boolean loginToServer( ) {
         InitClientToServer initClientToServer = new InitClientToServer();
 
+
         System.out.print("Podaj swój ID (Jeżeli go nie posiadasz wpisz -1): ");
         Scanner scanner = new Scanner(System.in);
         try {
@@ -82,7 +83,12 @@ public class Client {
         String loginDataJson = ConverterClassToJson.convert(initClientToServer);
         communicateManager.sendCommunicate(loginDataJson);
 
-        return true;
+        String ret = communicateManager.receiveCommunicate();
+        if( ret.equals(StateServer.CONNECTED.toString())) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean isServerBUSY( ) {

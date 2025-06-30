@@ -1,8 +1,11 @@
 package server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 
+import announcements.FileInformation;
 import announcements.InitClientToServer;
 import announcements.ListClientsFiles;
 import announcements.StateServer;
@@ -10,7 +13,7 @@ import database.Manager_db;
 import universal.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.FileManager;
-
+import universal.FileStatusComparator;
 
 
 public class UserHandling implements Runnable {
@@ -35,23 +38,41 @@ public class UserHandling implements Runnable {
         String initJsonFromClient = communicateManager.receiveCommunicate();
         InitClientToServer loginData = ConverterClassToJson.restoreInitClientToServer(initJsonFromClient);
 
+        try {
+            while( !Manager_db.isCorrectUser(loginData.ID, loginData.pathClientArchive) ) {
+                if (loginData.ID == -1 ) {
+                    this.createNewUser(loginData);
+                }else {
+                    System.out.println("Błąd logowania do ID: " + loginData.ID);
+                    communicateManager.sendCommunicate(StateServer.PERMISION_DENIED.toString());
+
+                    initJsonFromClient = communicateManager.receiveCommunicate();
+                    loginData = ConverterClassToJson.restoreInitClientToServer(initJsonFromClient);
+                }
+            }
+        }
+        catch (NullPointerException e) {
+            return;
+        }
 
 
-        if (loginData.ID == -1 ) {
-            this.createNewUser(loginData);
-        }
-        else if( !Manager_db.isCorrectUser(loginData.ID, loginData.pathClientArchive) ) {
-            System.out.println("Błąd logowania do ID: " + loginData.ID);
-        }
-        else {
-            System.out.println("Poprawnie zalogowany użytkownik " + loginData.ID);
-            communicateManager.sendCommunicate(String.valueOf(loginData.ID));
-        }
+        System.out.println("Poprawnie zalogowany użytkownik " + loginData.ID);
+        communicateManager.sendCommunicate(StateServer.CONNECTED.toString());
+        communicateManager.sendCommunicate(String.valueOf(loginData.ID));
 
+        this.userHomePath = "server\\" + loginData.ID + loginData.pathClientArchive.replace('/', '\\');
+        this.fileManager = new FileManager(this.userHomePath);
 
         String filesListJsonFromClient =  communicateManager.receiveCommunicate();
         ListClientsFiles comunicate = ConverterClassToJson.restoreFileInformation(filesListJsonFromClient);
         System.out.println(comunicate);
+
+        List<FileInformation> localFiles = this.fileManager.getListOfFilesInformation();
+        printList(localFiles);
+        List<FileInformation> neededChangesFiles = FileStatusComparator.compare(comunicate.filesInformation, localFiles);
+
+        System.out.println("Zmiany wysyłąne do klienta: \n");
+        printList(neededChangesFiles);
 
 
         cleanUP();
@@ -62,7 +83,6 @@ public class UserHandling implements Runnable {
         int id = Manager_db.addUser(loginData.IP, loginData.pathClientArchive);
         loginData.ID = id;
         this.userHomePath = "server/" + loginData.ID;
-        this. fileManager = new FileManager(this.userHomePath);
         fileManager.createDirectory(this.userHomePath + loginData.pathClientArchive);
 
         System.out.println("Nowy użytkownik utworzony o ID " + id);
@@ -76,5 +96,14 @@ public class UserHandling implements Runnable {
             throw new RuntimeException(e);
         }
 
+    }
+
+
+    private static void printList(List<FileInformation> list) {
+        int index = 0;
+        for (FileInformation fileInformation : list) {
+            System.out.println(index + ") " + fileInformation);
+            index++;
+        }
     }
 }
