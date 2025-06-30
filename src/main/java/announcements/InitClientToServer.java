@@ -3,7 +3,7 @@ package announcements;
 import java.io.Serializable;
 
 public class InitClientToServer implements Serializable {
-    public String  pathClientArchive;
+    public String  IP, pathClientArchive;
     public long ID;
 
     @Override

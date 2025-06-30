@@ -5,6 +5,9 @@ import announcements.ListClientsFiles;
 import announcements.TypeOfFile;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -92,4 +95,16 @@ public class FileManager {
 
     }
 
+    public boolean isDirectoryExists(String pathStr) {
+        Path path = Paths.get(pathStr);
+        return Files.exists(path) && Files.isDirectory(path);
+    }
+
+    public boolean createDirectory(String path) {
+        File dir = new File(path);
+        if (!dir.exists()) {
+            return dir.mkdirs();
+        }
+        return false;
+    }
 }

@@ -55,6 +55,7 @@ public class Client {
         InitClientToServer initClientToServer = new InitClientToServer();
 
         System.out.print("Podaj swój ID: ");
+        System.out.println("Jeżeli go nie posiadasz wpisz -1");
         Scanner scanner = new Scanner(System.in);
         try {
             initClientToServer.ID = Long.parseLong(scanner.nextLine());
@@ -67,9 +68,17 @@ public class Client {
         System.out.print("Podaj scieżkę swojego katalogu: ");
         initClientToServer.pathClientArchive = scanner.nextLine();
 
+        try {
+            InetAddress localHost = InetAddress.getLocalHost();
+            initClientToServer.IP = localHost.getHostAddress();
+        } catch (UnknownHostException e) {
+            System.out.println("Nie można uzyskać adresu IP: " + e.getMessage());
+        }
+
+
         // TODO: usunąc po testach
-        initClientToServer.ID  = 1;
-        initClientToServer.pathClientArchive = "/";
+        initClientToServer.ID  = 10;
+        initClientToServer.pathClientArchive = "/ala/ma/kota";
 
         String loginDataJson = ConverterClassToJson.convert(initClientToServer);
         communicateManager.sendCommunicate(loginDataJson);
