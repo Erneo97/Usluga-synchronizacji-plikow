@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -104,6 +105,15 @@ public class FileManager {
             return dir.mkdirs();
         }
         return false;
+    }
+
+    public static void deleteDirectory(Path path) throws IOException {
+        if (Files.exists(path)) {
+            Files.walk(path)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
     }
 
 
