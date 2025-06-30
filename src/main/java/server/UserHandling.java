@@ -53,11 +53,7 @@ public class UserHandling implements Runnable {
 
 
 
-        try {
-            socket.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        cleanUP();
         System.out.println("///////////////////////////////////////////\n\n" );
     }
 
@@ -71,4 +67,13 @@ public class UserHandling implements Runnable {
         System.out.println("Nowy użytkownik utworzony o ID " + id);
     }
 
+    private void cleanUP( ) {
+        this.communicateManager.cleanUp();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

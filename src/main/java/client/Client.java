@@ -129,7 +129,7 @@ public class Client {
         ListClientsFiles firstCommunicate = new ListClientsFiles();
 
 
-
+        client.cleanUP();
     }
 
     private static void printList(List<FileInformation> list) {
@@ -137,6 +137,15 @@ public class Client {
         for (FileInformation fileInformation : list) {
             System.out.println(index + ") " + fileInformation);
             index++;
+        }
+    }
+
+    private void cleanUP() {
+        this.communicateManager.cleanUp();
+        try {
+            this.socket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
