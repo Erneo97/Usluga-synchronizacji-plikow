@@ -14,8 +14,8 @@ import universal.FileManager;
 
 
 public class UserHandling implements Runnable {
-    private Socket socket;
-    private CommunicateManager communicateManager;
+    private final Socket socket;
+    private final CommunicateManager communicateManager;
     FileManager fileManager;
     String userHomePath;
 

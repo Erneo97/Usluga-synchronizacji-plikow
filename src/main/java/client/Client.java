@@ -83,7 +83,6 @@ public class Client {
         String loginDataJson = ConverterClassToJson.convert(initClientToServer);
         communicateManager.sendCommunicate(loginDataJson);
 
-
         return true;
     }
 
@@ -128,18 +127,7 @@ public class Client {
 
 
         ListClientsFiles firstCommunicate = new ListClientsFiles();
-        try {
-            InetAddress localHost = InetAddress.getLocalHost();
-            firstCommunicate.IP  = localHost.getHostAddress();
-            firstCommunicate.filesInformation = informationFiles;
 
-            String jsonToSEND = ConverterClassToJson.convert(firstCommunicate);
-            client.communicateManager.sendCommunicate(jsonToSEND);
-
-
-        } catch (UnknownHostException e) {
-            System.out.println("Nie można uzyskać adresu IP: " + e.getMessage());
-        }
 
 
     }

@@ -1,6 +1,6 @@
 package announcements;
 
-public enum TypeActionToTakeOnTheFile {
+public enum FileStatus {
     SEND,
     WITHOUT_CHANGES,
     DELETE,
