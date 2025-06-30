@@ -5,9 +5,12 @@ import announcements.ListClientsFiles;
 import announcements.TypeOfFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -89,15 +92,10 @@ public class FileManager {
         System.out.println(info);
 
         ListClientsFiles listClientsFiles = new ListClientsFiles();
-        listClientsFiles.IP = "127.0.0.1";
+        listClientsFiles.ID = 1;
         listClientsFiles.filesInformation = info;
 
 
-    }
-
-    public boolean isDirectoryExists(String pathStr) {
-        Path path = Paths.get(pathStr);
-        return Files.exists(path) && Files.isDirectory(path);
     }
 
     public boolean createDirectory(String path) {
@@ -107,4 +105,28 @@ public class FileManager {
         }
         return false;
     }
+
+
+    public static boolean deleteFile(String filePath) {
+        File file = new File(filePath);
+        if (file.exists() && file.isFile()) {
+            return file.delete();
+        }
+        return false;
+    }
+
+    public static boolean overwriteFile(String filePath, byte[] content, long lastModifiedMillis) throws IOException {
+        Files.write(Paths.get(filePath), content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+        FileTime fileTime = FileTime.fromMillis(lastModifiedMillis);
+        Files.setLastModifiedTime(Paths.get(filePath), fileTime);
+
+        return true;
+    }
+
+    public static boolean addNewFile(String filePath, byte[] content) throws IOException {
+        Files.write(Paths.get(filePath), content);
+        return true;
+    }
+
 }
