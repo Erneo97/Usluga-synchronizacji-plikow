@@ -33,7 +33,6 @@ public class FileManager {
     }
 
 
-
     private  List<FileInformation> getListOfFilesInformation() {
         File[] entries = getListOfFiles();
         if (entries == null) {
