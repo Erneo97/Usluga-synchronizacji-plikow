@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 public class FileManager {
-    private final String file_path;
+    private String file_path;
 
     public FileManager(String file_path) {
         this.file_path = file_path;
@@ -69,13 +69,15 @@ public class FileManager {
     }
 
     private FileInformation getInformationFromFile(File file) {
+        this.file_path = this.file_path.replace('/', '\\');
+        System.out.println("debug:  " + file.getPath() + "    " + this.file_path);
         FileInformation information = new FileInformation();
 
         information.fileName = file.getName();
         information.fileSize = String.format("%d", file.length());
         information.modfiferTime = new Date(file.lastModified()).toString();
         information.fileType = file.isDirectory() ? TypeOfFile.DIR.name() : TypeOfFile.FILE.name();
-        information.filePath = file.getPath().replaceFirst(this.file_path, "") ;
+        information.filePath = file.getPath().replace(this.file_path, "");
 
         return information;
     }

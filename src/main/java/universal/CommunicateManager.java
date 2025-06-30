@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class CommunicateManager {
     BufferedReader reader = null;
@@ -23,14 +24,23 @@ public class CommunicateManager {
         String json ;
         try {
             json = reader.readLine();
-        } catch (IOException e) {
+        }
+        catch (SocketException e) {
+            System.out.println("Utracono połączenie");
+            return null;
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
         return json;
     }
 
-    public void sendCommunicate(String comunicate) {
+    public boolean sendCommunicate(String comunicate) {
         writer.println(comunicate);
+        if (writer.checkError()) {
+            return false;
+        }
+        return true;
     }
 
 
