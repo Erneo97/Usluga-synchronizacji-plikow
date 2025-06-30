@@ -3,12 +3,11 @@ package server;
 import java.io.IOException;
 import java.net.Socket;
 import database.Manager_db;
-import universal.FileManager;
+
 
 public class UserHandling implements Runnable {
     private Socket socket;
     private Manager_db managerDatabse;
-    private FileManager fileManager;
 
     UserHandling(Socket socket) {
         this.socket = socket;
