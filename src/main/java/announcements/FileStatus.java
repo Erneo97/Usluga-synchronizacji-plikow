@@ -5,4 +5,5 @@ public enum FileStatus {
     WITHOUT_CHANGES,
     DELETE,
     MODIFED,
+    NO_INFORMATION,
 }

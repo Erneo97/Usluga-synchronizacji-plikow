@@ -75,7 +75,7 @@ public class FileManager {
         information.fileSize = String.format("%d", file.length());
         information.modfiferTime = new Date(file.lastModified()).toString();
         information.fileType = file.isDirectory() ? TypeOfFile.DIR.name() : TypeOfFile.FILE.name();
-        information.filePath = file.getPath();
+        information.filePath = file.getPath().replaceFirst(this.file_path, "") ;
 
         return information;
     }

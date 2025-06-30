@@ -45,12 +45,13 @@ public class UserHandling implements Runnable {
         }
         else {
             System.out.println("Poprawnie zalogowany użytkownik " + loginData.ID);
+            communicateManager.sendCommunicate(String.valueOf(loginData.ID));
         }
 
 
         String filesListJsonFromClient =  communicateManager.receiveCommunicate();
         ListClientsFiles comunicate = ConverterClassToJson.restoreFileInformation(filesListJsonFromClient);
-
+        System.out.println(comunicate);
 
 
         cleanUP();

@@ -54,8 +54,7 @@ public class Client {
     private boolean loginToServer( ) {
         InitClientToServer initClientToServer = new InitClientToServer();
 
-        System.out.print("Podaj swój ID: ");
-        System.out.println("Jeżeli go nie posiadasz wpisz -1");
+        System.out.print("Podaj swój ID (Jeżeli go nie posiadasz wpisz -1): ");
         Scanner scanner = new Scanner(System.in);
         try {
             initClientToServer.ID = Long.parseLong(scanner.nextLine());
@@ -114,7 +113,8 @@ public class Client {
             System.out.println("\tBłędne dane logowania\n\tPonownie wprowadź dane");
         }
         System.out.println("\tPoprawnie zalogowano na serwer");
-
+        String idFromServer = client.communicateManager.receiveCommunicate();
+        System.out.println("idFromServer: " + idFromServer);
 
 
         FileManager fileManager = new FileManager("client_data");
@@ -125,10 +125,13 @@ public class Client {
         Client.printList(informationFiles);
 
 
-
         ListClientsFiles firstCommunicate = new ListClientsFiles();
 
+        firstCommunicate.filesInformation = informationFiles;
+        firstCommunicate.ID = Integer.parseInt(idFromServer);
+        String json = ConverterClassToJson.convert(firstCommunicate);
 
+        client.communicateManager.sendCommunicate(json);
         client.cleanUP();
     }
 
