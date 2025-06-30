@@ -11,9 +11,12 @@ import java.util.Scanner;
 import announcements.FileInformation;
 import announcements.InitClientToServer;
 import announcements.ListClientsFiles;
+import announcements.StateServer;
 import universal.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.FileManager;
+
+import static java.lang.Thread.sleep;
 
 public class Client {
     Socket socket = null;
@@ -75,10 +78,29 @@ public class Client {
         return true;
     }
 
+    private boolean isServerBUSY( ) {
+        if (communicateManager.receiveCommunicate().equals( StateServer.BUSY.toString() )) {
+            return true;
+        }
+        return false;
+    }
+
+    void waitToServerReady( ) {
+        while (this.isServerBUSY( )) {
+            System.out.println("Serwer zajęty czekam na jego dostępność...");
+            try {
+                sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     public static void main(String[] args) {
         Client client = new Client();
 
         client.connectToServer();
+        client.waitToServerReady();
 
         while (!client.loginToServer()) {
             System.out.println("\tBłędne dane logowania\n\tPonownie wprowadź dane");
