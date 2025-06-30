@@ -1,21 +1,21 @@
 package universal;
 
-import announcements.InitClientToServer;
+import announcements.ListClientsFiles;
 import com.google.gson.Gson;
 
 
 public class ConverterFilesIngormationToJson {
 
-    public static String convertInitClientToServer(InitClientToServer filesInformation) {
+    public static String convertInitClientToServer(ListClientsFiles filesInformation) {
         Gson gson = new Gson();
         String json = gson.toJson(filesInformation);
 
         return json;
     }
 
-    public static InitClientToServer restoreInitClientToServer(String filesInformation) {
+    public static ListClientsFiles restoreInitClientToServer(String filesInformation) {
         Gson gson = new Gson();
-        InitClientToServer information = gson.fromJson(filesInformation, InitClientToServer.class);
+        ListClientsFiles information = gson.fromJson(filesInformation, ListClientsFiles.class);
 
         return information;
     }

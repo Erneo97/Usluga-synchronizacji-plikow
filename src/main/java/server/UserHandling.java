@@ -3,7 +3,7 @@ package server;
 import java.io.IOException;
 import java.net.Socket;
 
-import announcements.InitClientToServer;
+import announcements.ListClientsFiles;
 import database.Manager_db;
 import universal.CommunicateManager;
 import universal.ConverterFilesIngormationToJson;
@@ -24,7 +24,7 @@ public class UserHandling implements Runnable {
         System.out.println("UserHandling started o adrersie" + socket.getInetAddress());
 
         String initJsonFromClient =  communicateManager.receiveCommunicate();
-        InitClientToServer comunicate = ConverterFilesIngormationToJson.restoreInitClientToServer(initJsonFromClient);
+        ListClientsFiles comunicate = ConverterFilesIngormationToJson.restoreInitClientToServer(initJsonFromClient);
 
         System.out.println("Pierwszy komunikat:\n" + comunicate);
 

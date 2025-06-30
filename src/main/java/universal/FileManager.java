@@ -1,7 +1,7 @@
 package universal;
 
 import announcements.FileInformation;
-import announcements.InitClientToServer;
+import announcements.ListClientsFiles;
 import announcements.TypeOfFile;
 
 import java.io.File;
@@ -85,9 +85,9 @@ public class FileManager {
         List<FileInformation> info = fm.getListOfFilesInformation();
         System.out.println(info);
 
-        InitClientToServer initClientToServer = new InitClientToServer();
-        initClientToServer.IP = "127.0.0.1";
-        initClientToServer.filesInformation = info;
+        ListClientsFiles listClientsFiles = new ListClientsFiles();
+        listClientsFiles.IP = "127.0.0.1";
+        listClientsFiles.filesInformation = info;
 
 
     }

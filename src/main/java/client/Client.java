@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import announcements.FileInformation;
-import announcements.InitClientToServer;
+import announcements.ListClientsFiles;
 import universal.CommunicateManager;
 import universal.ConverterFilesIngormationToJson;
 import universal.FileManager;
@@ -61,7 +61,7 @@ public class Client {
         System.out.println("Twoja lista plików:\n");
         Client.printList(informationFiles);
 
-        InitClientToServer firstCommunicate = new InitClientToServer();
+        ListClientsFiles firstCommunicate = new ListClientsFiles();
         try {
             InetAddress localHost = InetAddress.getLocalHost();
             firstCommunicate.IP  = localHost.getHostAddress();
