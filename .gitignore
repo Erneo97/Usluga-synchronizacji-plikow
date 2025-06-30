@@ -40,3 +40,4 @@ build/
 /server/test.db
 /src/main/java/com/example/Main.java
 /.idea/.gitignore
+
