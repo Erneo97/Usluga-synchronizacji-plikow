@@ -3,10 +3,7 @@ package server;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import announcements.*;
@@ -14,6 +11,7 @@ import database.Manager_db;
 import universal.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.FileManager;
+import universal.FilePart;
 import universal.FileStatusComparator;
 
 
@@ -80,8 +78,11 @@ public class UserHandling implements Runnable {
 
 
 
+        System.out.println("Pobranie pliku: " );
+        TreeMap<Integer, FilePart> partsFile = communicateManager.downloadAndSaveFile();
+        fileManager.saveFileFromParts(partsFile);
 
-
+        fileManager.updateModificationDates(neededChangesFiles);
 
         cleanUP();
         System.out.println("///////////////////////////////////////////\n\n" );
@@ -123,7 +124,7 @@ public class UserHandling implements Runnable {
         for (FileInformation file : files) {
             if (FileStatus.DELETE == file.fileStatus) {
                 deletes.add(file);
-            } else if( !file.fileType.equals(TypeOfFile.DIR.name()) ) {
+            } else if( !file.fileType.equals(TypeOfFile.DIR.name()) && file.fileStatus != FileStatus.WITHOUT_CHANGES ) {
                 others.add(file);
             }
         }
@@ -179,4 +180,6 @@ public class UserHandling implements Runnable {
         if( index == 0)
             System.out.println("Brak elementów do wyświetlneia");
     }
+
+
 }

@@ -8,13 +8,15 @@ public class FilePart implements Serializable {
     public int partSize;
     public int fullSizeOfFile;
     public int partNumber;
+    public String pathFile;
     public byte[] data;
 
-    public FilePart(byte[] buffer, int read, int fullFileSize, int partNumber, int offset) {
+    public FilePart(byte[] buffer, int read, int fullFileSize, int partNumber, String pathFile) {
         this.partSize = Math.min(read, maxSizePart);
         this.data = new byte[this.partSize];
+        this.pathFile = pathFile;
 
-        System.arraycopy(buffer, offset, this.data, 0, this.partSize);
+        System.arraycopy(buffer, 0, this.data, 0, this.partSize);
 
         this.fullSizeOfFile = fullFileSize;
         this.partNumber = partNumber;

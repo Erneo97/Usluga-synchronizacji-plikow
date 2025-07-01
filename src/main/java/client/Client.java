@@ -1,5 +1,6 @@
 package client;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -147,6 +148,15 @@ public class Client {
 
         System.out.println("Prośba od serwera o wysłanie: ");
         printList(neededToSend.filesInformation);
+
+
+        System.out.println("Test przesyłu danych");
+
+        FileInformation test = neededToSend.filesInformation.get(0);
+        File fileToSend = fileManager.getFile(test.filePath);
+
+        client.communicateManager.sendFile(fileToSend, test.filePath) ;
+
 
 
         client.cleanUP();

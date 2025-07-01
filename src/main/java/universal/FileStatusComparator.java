@@ -21,7 +21,7 @@ public class FileStatusComparator {
 
             if (serverFile == null) {
                 clientFile.fileStatus = FileStatus.SEND;
-            } else if (Objects.equals(clientFile.modfiferTime, serverFile.modfiferTime)) {
+            } else if (clientFile.modfiferTime.equals(serverFile.modfiferTime)) {
                 clientFile.fileStatus = FileStatus.WITHOUT_CHANGES;
             } else {
                 clientFile.fileStatus = FileStatus.MODIFED;
