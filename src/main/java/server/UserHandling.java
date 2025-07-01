@@ -39,7 +39,7 @@ public class UserHandling implements Runnable {
         InitClientToServer loginData = ConverterClassToJson.restoreInitClientToServer(initJsonFromClient);
 
         try {
-            logInUser(loginData, initJsonFromClient);
+            logInUser(loginData);
         }
         catch (NullPointerException e) {
             return;
@@ -60,19 +60,26 @@ public class UserHandling implements Runnable {
         List<FileInformation> neededChangesFiles = FileStatusComparator.compare(comunicate.filesInformation, localFiles);
 
 
-        Map<FileStatus, List<FileInformation>> separated = separateByDelete(neededChangesFiles);
+        Map<FileStatus, List<FileInformation>> separated = separateDeleteFromToBeSent(neededChangesFiles);
+
+
+        List<FileInformation> listFilesToDelete = separated.get(FileStatus.DELETE);
+        System.out.println("\nZmiany dla serwera: ");
+        printList(listFilesToDelete);
+        deleteUnnecessaryFiles(listFilesToDelete);
+
 
 
         neededChangesFiles = separated.get(FileStatus.WITHOUT_CHANGES);
         System.out.println("\nZmiany wysyłąne do klienta: ");
         printList(neededChangesFiles);
 
+        comunicate.filesInformation = neededChangesFiles;
+        String requestNewData = ConverterClassToJson.convert(comunicate);
+        communicateManager.sendCommunicate(requestNewData);
 
-        List<FileInformation> listFilesToDelete = separated.get(FileStatus.DELETE);
-        System.out.println("\nZmiany dla serwera: ");
-        printList(listFilesToDelete);
 
-        deleteUnnecessaryFiles(listFilesToDelete);
+
 
 
 
@@ -109,15 +116,14 @@ public class UserHandling implements Runnable {
         cleanerFile.start();
     }
 
-
-    private static Map<FileStatus, List<FileInformation>> separateByDelete(List<FileInformation> files) {
+    private static Map<FileStatus, List<FileInformation>> separateDeleteFromToBeSent(List<FileInformation> files) {
         List<FileInformation> deletes = new ArrayList<>();
         List<FileInformation> others = new ArrayList<>();
 
         for (FileInformation file : files) {
             if (FileStatus.DELETE == file.fileStatus) {
                 deletes.add(file);
-            } else {
+            } else if( !file.fileType.equals(TypeOfFile.DIR.name()) ) {
                 others.add(file);
             }
         }
@@ -128,7 +134,8 @@ public class UserHandling implements Runnable {
         return result;
     }
 
-    private void logInUser(InitClientToServer loginData, String initJsonFromClient ) throws NullPointerException {
+    private void logInUser(InitClientToServer loginData ) throws NullPointerException {
+        String initJsonFromClient;
         while( !Manager_db.isCorrectUser(loginData.ID, loginData.pathClientArchive) ) {
             if (loginData.ID == -1 ) {
                 this.createNewUser(loginData);
@@ -169,5 +176,7 @@ public class UserHandling implements Runnable {
             System.out.println(index + ") " + fileInformation);
             index++;
         }
+        if( index == 0)
+            System.out.println("Brak elementów do wyświetlneia");
     }
 }

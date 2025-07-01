@@ -141,6 +141,14 @@ public class Client {
         String json = ConverterClassToJson.convert(firstCommunicate);
 
         client.communicateManager.sendCommunicate(json);
+
+        String neededToSendJson = client.communicateManager.receiveCommunicate();
+        ListClientsFiles neededToSend = ConverterClassToJson.restoreFileInformation(neededToSendJson);
+
+        System.out.println("Prośba od serwera o wysłanie: ");
+        printList(neededToSend.filesInformation);
+
+
         client.cleanUP();
     }
 

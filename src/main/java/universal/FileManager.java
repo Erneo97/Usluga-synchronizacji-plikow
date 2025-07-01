@@ -17,10 +17,10 @@ import java.util.Date;
 import java.util.List;
 
 public class FileManager {
-    private String file_path;
+    private String mainDirPath;
 
-    public FileManager(String file_path) {
-        this.file_path = file_path;
+    public FileManager(String mainDirPath) {
+        this.mainDirPath = mainDirPath;
     }
 
     public void  printFileInformation(File file) {
@@ -69,21 +69,21 @@ public class FileManager {
     }
 
     private FileInformation getInformationFromFile(File file) {
-        this.file_path = this.file_path.replace('/', '\\');
+        this.mainDirPath = this.mainDirPath.replace('/', '\\');
         FileInformation information = new FileInformation();
 
         information.fileName = file.getName();
         information.fileSize = String.format("%d", file.length());
         information.modfiferTime = new Date(file.lastModified()).toString();
         information.fileType = file.isDirectory() ? TypeOfFile.DIR.name() : TypeOfFile.FILE.name();
-        information.filePath = file.getPath().replace(this.file_path, "");
+        information.filePath = file.getPath().replace(this.mainDirPath, "");
 
         return information;
     }
 
 
     private File[] getListOfFiles() {
-        File managedDirectory = new File(file_path);
+        File managedDirectory = new File(mainDirPath);
         File[] entries = managedDirectory.listFiles();
         return entries;
     }
@@ -120,7 +120,7 @@ public class FileManager {
 
     public boolean deleteFile(String filePath) {
         String projectRootPath = System.getProperty("user.dir");
-        File file = new File(projectRootPath + File.separator + this.file_path + File.separator + filePath);
+        File file = new File(projectRootPath + File.separator + this.mainDirPath + File.separator + filePath);
 
         if (!file.exists()) {
             return false;
@@ -146,9 +146,17 @@ public class FileManager {
         return true;
     }
 
-    public static boolean addNewFile(String filePath, byte[] content) throws IOException {
-        Files.write(Paths.get(filePath), content);
-        return true;
+    public  boolean addNewFile(String filePath, byte[] content)  {
+        try {
+            String projectRootPath = System.getProperty("user.dir");
+            Path fullPath = Paths.get(projectRootPath, this.mainDirPath, filePath);
+            Files.createDirectories(fullPath.getParent());
+            Files.write(fullPath, content);
+
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 }
