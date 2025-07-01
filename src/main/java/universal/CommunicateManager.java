@@ -1,11 +1,8 @@
 package universal;
 
-import announcements.FileInformation;
-
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class CommunicateManager {
@@ -57,13 +54,12 @@ public class CommunicateManager {
             int partNumber = 0;
 
             while ((bytesRead = fis.read(buffer)) != -1) {
-                // Kopiujemy tylko odczytane bajty do nowej tablicy
                 byte[] dataCopy = Arrays.copyOf(buffer, bytesRead);
                 FilePart part = new FilePart(dataCopy, bytesRead, (int) fileSize, partNumber++, filePath);
                 oos.writeObject(part);
-                System.out.println("Wysłano część #" + part.partNumber);
             }
-            oos.flush(); // upewnij się, że wszystko poszło
+            System.out.println("Wysłano część #" + partNumber);
+            oos.flush();
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -71,7 +67,7 @@ public class CommunicateManager {
         return true;
     }
 
-    public TreeMap<Integer, FilePart>  downloadAndSaveFile() {
+    public TreeMap<Integer, FilePart>  downloadPartsOfFile() {
         TreeMap<Integer, FilePart> parts = new TreeMap<>();
         int expectedSize = -1;
 
@@ -79,13 +75,11 @@ public class CommunicateManager {
             while (true) {
                 Object obj = ois.readObject();
 
-                if (!(obj instanceof FilePart)) break; // zakończ gdy nie FilePart
+                if (!(obj instanceof FilePart)) break;
 
                 FilePart part = (FilePart) obj;
                 parts.put(part.partNumber, part);
                 expectedSize = part.fullSizeOfFile;
-
-                System.out.println("Odebrano część #" + part.partNumber + ", rozmiar: " + part.partSize + " bajtów   " + part.pathFile);
 
                 if (getTotalSize(parts) >= expectedSize) break;
             }

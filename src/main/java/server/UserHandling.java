@@ -6,13 +6,16 @@ import java.net.Socket;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import announcements.*;
 import database.Manager_db;
 import universal.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.FileManager;
 import universal.FilePart;
 import universal.FileStatusComparator;
+import universal.announcements.*;
+import universal.models.FileStatus;
+import universal.models.StateServer;
+import universal.models.TypeOfFile;
 
 
 public class UserHandling implements Runnable {
@@ -58,17 +61,25 @@ public class UserHandling implements Runnable {
         List<FileInformation> neededChangesFiles = FileStatusComparator.compare(comunicate.filesInformation, localFiles);
 
 
-        Map<FileStatus, List<FileInformation>> separated = separateDeleteFromToBeSent(neededChangesFiles);
 
+        Map<FileStatus, List<FileInformation>> separated = classifyActionOnGivenFile(neededChangesFiles);
 
         List<FileInformation> listFilesToDelete = separated.get(FileStatus.DELETE);
+
+        neededChangesFiles = separated.get(FileStatus.SEND);
+        List<FileInformation> movedFile = searchMovedFiled(listFilesToDelete, neededChangesFiles);
+
+
         System.out.println("\nZmiany dla serwera: ");
+
+        System.out.println("\tPliki do przeniesienia: ");
+        printList(movedFile);
+        System.out.println("\tPliki do usunięcia: ");
         printList(listFilesToDelete);
         deleteUnnecessaryFiles(listFilesToDelete);
 
 
 
-        neededChangesFiles = separated.get(FileStatus.WITHOUT_CHANGES);
         System.out.println("\nZmiany wysyłąne do klienta: ");
         printList(neededChangesFiles);
 
@@ -77,12 +88,16 @@ public class UserHandling implements Runnable {
         communicateManager.sendCommunicate(requestNewData);
 
 
+        if( !comunicate.filesInformation.isEmpty()) {
+            System.out.println("Pobranie plików od klienta: " );
+            for(int i=0; i<comunicate.filesInformation.size(); i++) {
+                TreeMap<Integer, FilePart> partsFile = communicateManager.downloadPartsOfFile();
+                fileManager.saveFileFromParts(partsFile);
+            }
+            fileManager.updateModificationDates(neededChangesFiles);
 
-        System.out.println("Pobranie pliku: " );
-        TreeMap<Integer, FilePart> partsFile = communicateManager.downloadAndSaveFile();
-        fileManager.saveFileFromParts(partsFile);
+        }
 
-        fileManager.updateModificationDates(neededChangesFiles);
 
         cleanUP();
         System.out.println("///////////////////////////////////////////\n\n" );
@@ -117,9 +132,10 @@ public class UserHandling implements Runnable {
         cleanerFile.start();
     }
 
-    private static Map<FileStatus, List<FileInformation>> separateDeleteFromToBeSent(List<FileInformation> files) {
+    private static Map<FileStatus, List<FileInformation>> classifyActionOnGivenFile(List<FileInformation> files) {
         List<FileInformation> deletes = new ArrayList<>();
         List<FileInformation> others = new ArrayList<>();
+
 
         for (FileInformation file : files) {
             if (FileStatus.DELETE == file.fileStatus) {
@@ -131,7 +147,32 @@ public class UserHandling implements Runnable {
 
         Map<FileStatus, List<FileInformation>> result = new HashMap<>();
         result.put(FileStatus.DELETE, deletes);
-        result.put(FileStatus.WITHOUT_CHANGES, others);
+        result.put(FileStatus.SEND, others);
+        return result;
+    }
+
+    private List<FileInformation> searchMovedFiled(List<FileInformation> server, List<FileInformation> fileToSend) {
+        List<FileInformation> result = fileToSend.stream()
+                .filter(fi1 -> server.stream().anyMatch(fi2 ->
+                        fi1.fileName.equals(fi2.fileName) &&
+                                fi1.modfiferTime.equals(fi2.modfiferTime) &&
+                                fi1.fileSize.equals(fi2.fileSize)
+                ))
+                .peek(fi -> fi.fileStatus = FileStatus.MOVE)
+                .collect(Collectors.toList());
+
+        fileToSend.removeIf(fi1 -> server.stream().anyMatch(fi2 ->
+                fi1.fileName.equals(fi2.fileName) &&
+                        fi1.modfiferTime.equals(fi2.modfiferTime) &&
+                        fi1.fileSize.equals(fi2.fileSize)
+        ));
+
+        server.removeIf(fi2 -> result.stream().anyMatch(fi1 ->
+                fi1.fileName.equals(fi2.fileName) &&
+                        fi1.modfiferTime.equals(fi2.modfiferTime) &&
+                        fi1.fileSize.equals(fi2.fileSize)
+        ));
+
         return result;
     }
 

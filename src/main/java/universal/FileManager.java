@@ -1,20 +1,16 @@
 package universal;
 
-import announcements.FileInformation;
-import announcements.ListClientsFiles;
-import announcements.TypeOfFile;
+import universal.announcements.FileInformation;
+import universal.announcements.ListClientsFiles;
+import universal.models.TypeOfFile;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.nio.file.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class FileManager {
     private String mainDirPath;
@@ -39,6 +35,10 @@ public class FileManager {
         }
     }
 
+    public File getFile(String fileName) {
+        String projectRootPath = System.getProperty("user.dir");
+        return new File(projectRootPath + File.separator + this.mainDirPath + File.separator + fileName);
+    }
 
     public List<FileInformation> getListOfFilesInformation() {
         File[] entries = getListOfFiles();
@@ -119,8 +119,7 @@ public class FileManager {
 
 
     public boolean deleteFile(String filePath) {
-        String projectRootPath = System.getProperty("user.dir");
-        File file = new File(projectRootPath + File.separator + this.mainDirPath + File.separator + filePath);
+        File file = getFile(filePath);
 
         if (!file.exists()) {
             return false;
@@ -137,24 +136,78 @@ public class FileManager {
         return file.delete();
     }
 
-    public static boolean overwriteFile(String filePath, byte[] content, long lastModifiedMillis) throws IOException {
-        Files.write(Paths.get(filePath), content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    public boolean saveFileFromParts(Map<Integer, FilePart> parts) {
+        if (parts.isEmpty()) return false;
 
-        FileTime fileTime = FileTime.fromMillis(lastModifiedMillis);
-        Files.setLastModifiedTime(Paths.get(filePath), fileTime);
+        List<Integer> sortedKeys = new ArrayList<>(parts.keySet());
+        Collections.sort(sortedKeys);
 
+        String fileName = parts.get(sortedKeys.get(0)).pathFile;
+
+        String fullPath = this.mainDirPath + File.separator + fileName;
+        createDir(fullPath);
+        try (FileOutputStream fos = new FileOutputStream(fullPath)) {
+            for (int key : sortedKeys) {
+                FilePart part = parts.get(key);
+                fos.write(part.data, 0, part.partSize);
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean createDir( String fullPath) {
+        File file = new File(fullPath);
+
+
+        File parentDir = file.getParentFile();
+        if (!parentDir.exists()) {
+            boolean dirsCreated = parentDir.mkdirs();
+            if (!dirsCreated) {
+                System.out.println("Nie udało się utworzyć katalogów: " + parentDir.getAbsolutePath());
+                return false;
+            }
+        }
         return true;
     }
 
-    public  boolean addNewFile(String filePath, byte[] content)  {
-        try {
-            String projectRootPath = System.getProperty("user.dir");
-            Path fullPath = Paths.get(projectRootPath, this.mainDirPath, filePath);
-            Files.createDirectories(fullPath.getParent());
-            Files.write(fullPath, content);
+    public void updateModificationDates(List<FileInformation> list) {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
+        for (FileInformation fi : list) {
+            String pathFile = this.mainDirPath + File.separator + fi.filePath;
+            File file = new File(pathFile);
+            if (file.exists()) {
+                try {
+                    Date parsedDate = sdf.parse(fi.modfiferTime);
+                    long newModTime = parsedDate.getTime();
+
+                    boolean success = file.setLastModified(newModTime);
+                    if (success) {
+                        fi.modfiferTime = new Date(newModTime).toString();
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Plik nie istnieje: " + pathFile);
+            }
+        }
+    }
+
+    public  boolean moveFile(String sourcePath, String targetPath) {
+        Path source = Paths.get(this.mainDirPath + File.separator + sourcePath);
+        Path target = Paths.get(this.mainDirPath + File.separator + targetPath);
+
+        try {
+            Files.createDirectories(target.getParent());
+
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
             return true;
         } catch (IOException e) {
+            System.err.println("Nie udało się przenieść pliku: " + e.getMessage());
             return false;
         }
     }

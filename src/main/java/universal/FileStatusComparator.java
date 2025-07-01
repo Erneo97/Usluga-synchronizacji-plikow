@@ -1,7 +1,7 @@
 package universal;
 
-import announcements.FileInformation;
-import announcements.FileStatus;
+import universal.announcements.FileInformation;
+import universal.models.FileStatus;
 
 import java.util.*;
 

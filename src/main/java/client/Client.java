@@ -9,10 +9,10 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Scanner;
 
-import announcements.FileInformation;
-import announcements.InitClientToServer;
-import announcements.ListClientsFiles;
-import announcements.StateServer;
+import universal.announcements.FileInformation;
+import universal.announcements.InitClientToServer;
+import universal.announcements.ListClientsFiles;
+import universal.models.StateServer;
 import universal.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.FileManager;
@@ -150,13 +150,18 @@ public class Client {
         printList(neededToSend.filesInformation);
 
 
-        System.out.println("Test przesyłu danych");
+        System.out.println("Przesyłanie plików");
 
-        FileInformation test = neededToSend.filesInformation.get(0);
-        File fileToSend = fileManager.getFile(test.filePath);
+        if(!neededToSend.filesInformation.isEmpty()) {
+            for (FileInformation fileInformation : neededToSend.filesInformation) {
+                File fileToSend = fileManager.getFile(fileInformation.filePath);
+                client.communicateManager.sendFile(fileToSend, fileInformation.filePath) ;
+            }
 
-        client.communicateManager.sendFile(fileToSend, test.filePath) ;
-
+        }
+        else {
+            System.out.println("Jesteś aktualny");
+        }
 
 
         client.cleanUP();

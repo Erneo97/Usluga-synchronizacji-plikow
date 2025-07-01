@@ -1,4 +1,4 @@
-package announcements;
+package universal.models;
 
 public enum FileStatus {
     SEND,
@@ -6,4 +6,5 @@ public enum FileStatus {
     DELETE,
     MODIFED,
     NO_INFORMATION,
+    MOVE,
 }
