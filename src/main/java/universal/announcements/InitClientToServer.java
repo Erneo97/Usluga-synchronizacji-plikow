@@ -1,4 +1,4 @@
-package announcements;
+package universal.announcements;
 
 import java.io.Serializable;
 

@@ -1,5 +1,6 @@
-package universal;
+package universal.managers;
 
+import universal.FilePart;
 import universal.announcements.FileInformation;
 import universal.announcements.ListClientsFiles;
 import universal.models.TypeOfFile;

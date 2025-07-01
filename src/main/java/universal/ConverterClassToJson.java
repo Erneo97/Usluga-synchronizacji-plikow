@@ -1,7 +1,7 @@
 package universal;
 
-import announcements.InitClientToServer;
-import announcements.ListClientsFiles;
+import universal.announcements.InitClientToServer;
+import universal.announcements.ListClientsFiles;
 import com.google.gson.Gson;
 
 

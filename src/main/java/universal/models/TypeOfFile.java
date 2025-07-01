@@ -1,4 +1,4 @@
-package announcements;
+package universal.models;
 
 public enum TypeOfFile {
     DIR,

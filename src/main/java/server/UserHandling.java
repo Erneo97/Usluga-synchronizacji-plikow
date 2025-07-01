@@ -7,9 +7,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import database.Manager_db;
-import universal.CommunicateManager;
+import universal.managers.CommunicateManager;
 import universal.ConverterClassToJson;
-import universal.FileManager;
+import universal.managers.FileManager;
 import universal.FilePart;
 import universal.FileStatusComparator;
 import universal.announcements.*;

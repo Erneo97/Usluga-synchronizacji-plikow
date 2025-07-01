@@ -1,4 +1,6 @@
-package universal;
+package universal.managers;
+
+import universal.FilePart;
 
 import java.io.*;
 import java.net.Socket;

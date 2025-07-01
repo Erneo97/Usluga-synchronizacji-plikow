@@ -1,4 +1,6 @@
-package announcements;
+package universal.announcements;
+
+import universal.models.FileStatus;
 
 public class FileInformation {
     public String fileName;

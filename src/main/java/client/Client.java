@@ -13,9 +13,9 @@ import universal.announcements.FileInformation;
 import universal.announcements.InitClientToServer;
 import universal.announcements.ListClientsFiles;
 import universal.models.StateServer;
-import universal.CommunicateManager;
+import universal.managers.CommunicateManager;
 import universal.ConverterClassToJson;
-import universal.FileManager;
+import universal.managers.FileManager;
 
 import static java.lang.Thread.sleep;
 
