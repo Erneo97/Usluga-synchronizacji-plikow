@@ -26,11 +26,13 @@ public class UserHandling implements Runnable {
     private final CommunicateManager communicateManager;
     FileManager fileManager;
     String userHomePath;
+    private  final long timeSync;
 
-    UserHandling(Socket socket) {
+    UserHandling(Socket socket, long timeSync) {
         this.socket = socket;
         this.communicateManager = new CommunicateManager(socket);
         communicateManager.sendCommunicate(StateServer.BUSY.toString());
+        this.timeSync = timeSync;
     }
 
 
@@ -104,7 +106,7 @@ public class UserHandling implements Runnable {
         communicateManager.sendCommunicate(StateServer.DONE.toString());
 
         FormaterTerminalText.printServerComunicate("wysyłam czas następnej synhronizacji");
-        communicateManager.sendCommunicate(String.valueOf(NextSyncTime.sec_5.getMilliseconds()));
+        communicateManager.sendCommunicate(String.valueOf(this.timeSync));
 
         FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
 
