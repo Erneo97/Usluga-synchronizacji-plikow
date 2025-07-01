@@ -70,7 +70,6 @@ public class FileManager {
 
     private FileInformation getInformationFromFile(File file) {
         this.file_path = this.file_path.replace('/', '\\');
-        System.out.println("debug:  " + file.getPath() + "    " + this.file_path);
         FileInformation information = new FileInformation();
 
         information.fileName = file.getName();

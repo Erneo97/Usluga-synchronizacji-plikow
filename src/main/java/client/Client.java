@@ -67,6 +67,7 @@ public class Client {
 
         System.out.print("Podaj scieżkę swojego katalogu: ");
         initClientToServer.pathClientArchive = scanner.nextLine();
+        initClientToServer.pathClientArchive = initClientToServer.pathClientArchive.replace('\\', '/');
 
         try {
             InetAddress localHost = InetAddress.getLocalHost();
