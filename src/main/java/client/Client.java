@@ -43,7 +43,7 @@ public class Client {
                 socket.connect(new InetSocketAddress(serverIP, port), 5000);
                 communicateManager = new CommunicateManager(socket);
             } catch (IOException e) {
-                System.out.println("Nie udało się połączyć w ciągu 5 sekund. Spróbuj ponownie.\n");
+                System.out.println("Nie udało się połączyć w ciągu 5 sekund. Spróbuj ponownie.");
                 return false;
             }
         }
@@ -112,7 +112,9 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
 
-        client.connectToServer();
+        while (!client.connectToServer() ) {
+            System.out.println("Czekam na połączenie...");
+        }
         client.waitToServerReady();
 
         while (!client.loginToServer()) {
