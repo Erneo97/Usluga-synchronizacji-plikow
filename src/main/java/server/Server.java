@@ -1,5 +1,7 @@
 package server;
 
+import universal.FormaterTerminalText;
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
@@ -22,7 +24,7 @@ public class Server {
             while(serverRunning) {
                 try {
                     UserHandling user = usersWaiting.take();
-                    System.out.println("\t\t\tObsługuje nowego użytkownika");
+                    FormaterTerminalText.printServerComunicate("\t\tObsługuje nowego użytkownika");
                     user.run();
                 } catch (InterruptedException e) {
                     break;
@@ -34,7 +36,7 @@ public class Server {
 
     void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Serwer nasłuchuje na porcie " + port);
+            FormaterTerminalText.printServerComunicate("Serwer nasłuchuje na porcie " + port);
 
             handleWatingUsers();
 
@@ -58,7 +60,7 @@ public class Server {
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Użycie: java Server <port>");
+            FormaterTerminalText.printFailure("Neleży podać port w parametrach wywołania");
             return;
         }
 

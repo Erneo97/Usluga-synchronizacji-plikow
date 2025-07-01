@@ -1,6 +1,7 @@
 package universal.managers;
 
 import universal.FilePart;
+import universal.FormaterTerminalText;
 
 import java.io.*;
 import java.net.Socket;
@@ -30,7 +31,8 @@ public class CommunicateManager {
             json = reader.readLine();
         }
         catch (SocketException e) {
-            System.out.println("Utracono połączenie");
+            FormaterTerminalText.printFailure("Utracono połączenie");
+
             return null;
         }
         catch (IOException e) {

@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import database.Manager_db;
+import universal.FormaterTerminalText;
 import universal.managers.CommunicateManager;
 import universal.ConverterClassToJson;
 import universal.managers.FileManager;
@@ -46,7 +47,8 @@ public class UserHandling implements Runnable {
             return;
         }
 
-        System.out.println("Poprawnie zalogowany użytkownik " + loginData.ID);
+
+        FormaterTerminalText.printSucess("Poprawnie zalogowany użytkownik " + loginData.ID);
         communicateManager.sendCommunicate(StateServer.CONNECTED.toString());
         communicateManager.sendCommunicate(String.valueOf(loginData.ID));
 
@@ -70,11 +72,11 @@ public class UserHandling implements Runnable {
         List<FileInformation> movedFile = searchMovedFiled(listFilesToDelete, neededChangesFiles);
 
 
-        System.out.println("\nZmiany dla serwera: ");
 
-        System.out.println("\tPliki do przeniesienia: ");
+        FormaterTerminalText.printServerComunicate("\nZmiany dla serwera: ");
+        FormaterTerminalText.printNormal("\tPliki do przeniesienia: ");
         printList(movedFile);
-        System.out.println("\tPliki do usunięcia: ");
+        FormaterTerminalText.printNormal("\tPliki do usunięcia: ");
         printList(listFilesToDelete);
         deleteUnnecessaryFiles(listFilesToDelete);
 
@@ -89,7 +91,7 @@ public class UserHandling implements Runnable {
 
 
         if( !comunicate.filesInformation.isEmpty()) {
-            System.out.println("Pobranie plików od klienta: " + comunicate.filesInformation.size() );
+            FormaterTerminalText.printNormal("Pobranie " + comunicate.filesInformation.size() + " plików od klienta: " );
             for(int i=0; i<comunicate.filesInformation.size(); i++) {
                 TreeMap<Integer, FilePart> partsFile = communicateManager.downloadPartsOfFile();
                 fileManager.saveFileFromParts(partsFile);
@@ -99,9 +101,9 @@ public class UserHandling implements Runnable {
         }
 
         communicateManager.sendCommunicate(StateServer.DONE.toString());
+        FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
 
         cleanUP();
-        System.out.println("///////////////////////////////////////////\n\n" );
     }
 
     private void deleteUnnecessaryFiles( List<FileInformation> list) {
@@ -183,7 +185,7 @@ public class UserHandling implements Runnable {
             if (loginData.ID == -1 ) {
                 this.createNewUser(loginData);
             }else {
-                System.out.println("Błąd logowania do ID: " + loginData.ID);
+                FormaterTerminalText.printFailure("Błąd logowania do ID: " + loginData.ID);
                 communicateManager.sendCommunicate(StateServer.PERMISION_DENIED.toString());
 
                 initJsonFromClient = communicateManager.receiveCommunicate();

@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Scanner;
 
+import universal.FormaterTerminalText;
 import universal.announcements.FileInformation;
 import universal.announcements.InitClientToServer;
 import universal.announcements.ListClientsFiles;
@@ -22,15 +23,17 @@ import static java.lang.Thread.sleep;
 public class Client {
     Socket socket = null;
     CommunicateManager communicateManager;
+    private boolean clientRuning = true;
 
     public boolean connectToServer() {
         Scanner scanner = new Scanner(System.in);
 
         while (socket == null || !socket.isConnected()) {
-            System.out.print("Podaj adres IP serwera: ");
+            FormaterTerminalText.printTextInputs("Podaj adres IP serwera: ");
             String serverIP = scanner.nextLine();
 
-            System.out.print("Podaj port serwera: ");
+
+            FormaterTerminalText.printTextInputs("Podaj port serwera: ");
             int port = scanner.nextInt();
             scanner.nextLine();
 
@@ -44,15 +47,15 @@ public class Client {
                 socket.connect(new InetSocketAddress(serverIP, port), 5000);
                 communicateManager = new CommunicateManager(socket);
             } catch (IOException e) {
-                System.out.println("Nie udało się połączyć w ciągu 5 sekund. Spróbuj ponownie.");
+                FormaterTerminalText.printFailure("Nie udało się połączyć w ciągu 5 sekund. Spróbuj ponownie.");
                 return false;
             }
         }
-        System.out.println("Połączono z serwerem.");
         return true;
     }
 
     private boolean loginToServer( ) {
+        FormaterTerminalText.printServerComunicate("Server dostępny");
         InitClientToServer initClientToServer = new InitClientToServer();
 
 
@@ -74,7 +77,7 @@ public class Client {
             InetAddress localHost = InetAddress.getLocalHost();
             initClientToServer.IP = localHost.getHostAddress();
         } catch (UnknownHostException e) {
-            System.out.println("Nie można uzyskać adresu IP: " + e.getMessage());
+            FormaterTerminalText.printFailure("Nie można uzyskać adresu IP: " + e.getMessage());
         }
 
 
@@ -86,7 +89,7 @@ public class Client {
         communicateManager.sendCommunicate(loginDataJson);
 
         String ret = communicateManager.receiveCommunicate();
-        if( ret.equals(StateServer.CONNECTED.toString())) {
+        if(ret!=null && ret.equals(StateServer.CONNECTED.toString())) {
             return true;
         }
 
@@ -94,7 +97,8 @@ public class Client {
     }
 
     private boolean isServerBUSY( ) {
-        if (communicateManager.receiveCommunicate().equals( StateServer.BUSY.toString() )) {
+        String ret =communicateManager.receiveCommunicate();
+        if (ret!=null && ret.equals(StateServer.BUSY.toString() )) {
             return true;
         }
         return false;
@@ -102,7 +106,8 @@ public class Client {
 
     void waitToServerReady( ) {
         while (this.isServerBUSY( )) {
-            System.out.println("Serwer zajęty czekam na jego dostępność...");
+            FormaterTerminalText.printServerComunicate("Serwer zajęty czekam na jego dostępność...");
+
             try {
                 sleep(1);
             } catch (InterruptedException e) {
@@ -121,67 +126,61 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
-
-        while (!client.connectToServer() ) {
-            System.out.println("Czekam na połączenie...");
-        }
-        client.waitToServerReady();
-
-        while (!client.loginToServer()) {
-            System.out.println("\tBłędne dane logowania\n\tPonownie wprowadź dane");
-        }
-        System.out.println("\tPoprawnie zalogowano na serwer");
-        String idFromServer = client.communicateManager.receiveCommunicate();
-        System.out.println("idFromServer: " + idFromServer);
-
-
         FileManager fileManager = new FileManager("client_data");
-        System.out.println("Odczytuje twój zbiór lokalny...");
-        List<FileInformation> informationFiles = fileManager.getListOfFilesInformation();
 
-        System.out.println("Twoja lista plików:\n");
-        Client.printList(informationFiles);
+        while( client.clientRuning ) {
+            while (!client.connectToServer() ) {
+                FormaterTerminalText.printNormal("Czekam na połączenie...");
+            }
+            FormaterTerminalText.printServerComunicate("Połączono z serwerem.");
+            client.waitToServerReady();
+
+            while (!client.loginToServer()) {
+                FormaterTerminalText.printFailure("\tBłędne dane logowania\n\tPonownie wprowadź dane");
+            }
+            FormaterTerminalText.printSucess("\tPoprawnie zalogowano na serwer");
+            String idFromServer = client.communicateManager.receiveCommunicate();
 
 
+            FormaterTerminalText.printNormal("Odczytuje twój zbiór lokalny...");
+            List<FileInformation> informationFiles = fileManager.getListOfFilesInformation();
+
+
+            FormaterTerminalText.printNormal("\nTwoja lista plików:");
+            Client.printList(informationFiles);
+
+
+            client.sendInitialListToServer(informationFiles, idFromServer);
+
+
+            String neededToSendJson = client.communicateManager.receiveCommunicate();
+            ListClientsFiles neededToSend = ConverterClassToJson.restoreFileInformation(neededToSendJson);
+
+            FormaterTerminalText.printServerComunicate("Prośba od serwera o wysłanie: ");
+            printList(neededToSend.filesInformation);
+
+
+            FormaterTerminalText.printNormal("Przesyłanie plików");
+            client.sendAllFileToServer(fileManager, neededToSend.filesInformation);
+
+//            client.symulujPrace();
+            FormaterTerminalText.printServerComunicate("Komunikacja zakończona - sukcesem");
+
+            client.cleanUP();
+        }
+    }
+
+    void sendInitialListToServer( List<FileInformation> informationFiles, String idFromServer ) {
         ListClientsFiles firstCommunicate = new ListClientsFiles();
-
         firstCommunicate.filesInformation = informationFiles;
         firstCommunicate.ID = Integer.parseInt(idFromServer);
         String json = ConverterClassToJson.convert(firstCommunicate);
 
-        client.communicateManager.sendCommunicate(json);
+        this.communicateManager.sendCommunicate(json);
+    }
 
-        String neededToSendJson = client.communicateManager.receiveCommunicate();
-        ListClientsFiles neededToSend = ConverterClassToJson.restoreFileInformation(neededToSendJson);
-
-        System.out.println("Prośba od serwera o wysłanie: ");
-        printList(neededToSend.filesInformation);
-
-
-        System.out.println("Przesyłanie plików");
-
-        if(!neededToSend.filesInformation.isEmpty()) {
-            for (FileInformation fileInformation : neededToSend.filesInformation) {
-                File fileToSend = fileManager.getFile(fileInformation.filePath);
-                client.communicateManager.sendFile(fileToSend, fileInformation.filePath) ;
-            }
-
-        }
-        else {
-            System.out.println("Jesteś aktualny");
-        }
-
-        System.out.println("Czekam na potwierdzenie");
-        StateServer stateComunication;
-        do {
-            String com = client.communicateManager.receiveCommunicate();
-            stateComunication = ConverterClassToJson.restoreStateServer(com);
-        }while (stateComunication != StateServer.DONE);
-
-
-        client.symulujPrace();
-
-        client.cleanUP();
+    public void shutdown() {
+        clientRuning = false;
     }
 
     private static void printList(List<FileInformation> list) {
@@ -192,10 +191,31 @@ public class Client {
         }
     }
 
+    private void sendAllFileToServer(FileManager fileManager, List<FileInformation> neededToSend) {
+        if(!neededToSend.isEmpty()) {
+            for (FileInformation fileInformation : neededToSend) {
+                File fileToSend = fileManager.getFile(fileInformation.filePath);
+                this.communicateManager.sendFile(fileToSend, fileInformation.filePath) ;
+            }
+
+        }
+        else {
+            FormaterTerminalText.printServerComunicate("Braj plików do aktualizacji");
+        }
+
+        FormaterTerminalText.printNormal("Czekam na potwierdzenie");
+        StateServer stateComunication;
+        do {
+            String com = this.communicateManager.receiveCommunicate();
+            stateComunication = ConverterClassToJson.restoreStateServer(com);
+        }while (stateComunication != StateServer.DONE);
+    }
+
     private void cleanUP() {
         this.communicateManager.cleanUp();
         try {
             this.socket.close();
+            this.socket = null;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
