@@ -118,12 +118,23 @@ public class FileManager {
     }
 
 
-    public static boolean deleteFile(String filePath) {
-        File file = new File(filePath);
-        if (file.exists() && file.isFile()) {
-            return file.delete();
+    public boolean deleteFile(String filePath) {
+        String projectRootPath = System.getProperty("user.dir");
+        File file = new File(projectRootPath + File.separator + this.file_path + File.separator + filePath);
+
+        if (!file.exists()) {
+            return false;
         }
-        return false;
+
+        if (file.isDirectory()) {
+            File[] contents = file.listFiles();
+            if (contents != null) {
+                for (File f : contents) {
+                    deleteFile(f.getPath());
+                }
+            }
+        }
+        return file.delete();
     }
 
     public static boolean overwriteFile(String filePath, byte[] content, long lastModifiedMillis) throws IOException {
