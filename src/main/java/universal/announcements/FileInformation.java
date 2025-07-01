@@ -6,7 +6,7 @@ public class FileInformation {
     public String fileName;
     public String fileType;
     public String modfiferTime;
-    public String fileSize;
+    public int fileSize;
     public String filePath;
     public FileStatus fileStatus;
 

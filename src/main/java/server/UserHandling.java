@@ -89,7 +89,7 @@ public class UserHandling implements Runnable {
 
 
         if( !comunicate.filesInformation.isEmpty()) {
-            System.out.println("Pobranie plików od klienta: " );
+            System.out.println("Pobranie plików od klienta: " + comunicate.filesInformation.size() );
             for(int i=0; i<comunicate.filesInformation.size(); i++) {
                 TreeMap<Integer, FilePart> partsFile = communicateManager.downloadPartsOfFile();
                 fileManager.saveFileFromParts(partsFile);
@@ -98,6 +98,7 @@ public class UserHandling implements Runnable {
 
         }
 
+        communicateManager.sendCommunicate(StateServer.DONE.toString());
 
         cleanUP();
         System.out.println("///////////////////////////////////////////\n\n" );
@@ -140,7 +141,7 @@ public class UserHandling implements Runnable {
         for (FileInformation file : files) {
             if (FileStatus.DELETE == file.fileStatus) {
                 deletes.add(file);
-            } else if( !file.fileType.equals(TypeOfFile.DIR.name()) && file.fileStatus != FileStatus.WITHOUT_CHANGES ) {
+            } else if( !file.fileType.equals(TypeOfFile.DIR.name()) && file.fileStatus != FileStatus.WITHOUT_CHANGES && file.fileSize > 0) {
                 others.add(file);
             }
         }
@@ -156,7 +157,7 @@ public class UserHandling implements Runnable {
                 .filter(fi1 -> server.stream().anyMatch(fi2 ->
                         fi1.fileName.equals(fi2.fileName) &&
                                 fi1.modfiferTime.equals(fi2.modfiferTime) &&
-                                fi1.fileSize.equals(fi2.fileSize)
+                                fi1.fileSize == fi2.fileSize
                 ))
                 .peek(fi -> fi.fileStatus = FileStatus.MOVE)
                 .collect(Collectors.toList());
@@ -164,13 +165,13 @@ public class UserHandling implements Runnable {
         fileToSend.removeIf(fi1 -> server.stream().anyMatch(fi2 ->
                 fi1.fileName.equals(fi2.fileName) &&
                         fi1.modfiferTime.equals(fi2.modfiferTime) &&
-                        fi1.fileSize.equals(fi2.fileSize)
+                        fi1.fileSize == fi2.fileSize
         ));
 
         server.removeIf(fi2 -> result.stream().anyMatch(fi1 ->
                 fi1.fileName.equals(fi2.fileName) &&
                         fi1.modfiferTime.equals(fi2.modfiferTime) &&
-                        fi1.fileSize.equals(fi2.fileSize)
+                        fi1.fileSize == fi2.fileSize
         ));
 
         return result;

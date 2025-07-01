@@ -5,4 +5,5 @@ public enum StateServer {
     READY,
     PERMISION_DENIED,
     CONNECTED,
+    DONE,
 }

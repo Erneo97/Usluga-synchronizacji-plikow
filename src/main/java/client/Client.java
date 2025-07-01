@@ -111,6 +111,14 @@ public class Client {
         }
     }
 
+    void symulujPrace( ) {
+        try {
+            sleep(6000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) {
         Client client = new Client();
 
@@ -163,6 +171,15 @@ public class Client {
             System.out.println("Jesteś aktualny");
         }
 
+        System.out.println("Czekam na potwierdzenie");
+        StateServer stateComunication;
+        do {
+            String com = client.communicateManager.receiveCommunicate();
+            stateComunication = ConverterClassToJson.restoreStateServer(com);
+        }while (stateComunication != StateServer.DONE);
+
+
+        client.symulujPrace();
 
         client.cleanUP();
     }
