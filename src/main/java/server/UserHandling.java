@@ -15,6 +15,7 @@ import universal.FilePart;
 import universal.FileStatusComparator;
 import universal.announcements.*;
 import universal.models.FileStatus;
+import universal.models.NextSyncTime;
 import universal.models.StateServer;
 import universal.models.TypeOfFile;
 
@@ -101,6 +102,10 @@ public class UserHandling implements Runnable {
         }
 
         communicateManager.sendCommunicate(StateServer.DONE.toString());
+
+        FormaterTerminalText.printServerComunicate("wysyłam czas następnej synhronizacji");
+        communicateManager.sendCommunicate(String.valueOf(NextSyncTime.sec_5.getMilliseconds()));
+
         FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
 
         cleanUP();

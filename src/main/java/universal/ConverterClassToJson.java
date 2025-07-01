@@ -3,6 +3,7 @@ package universal;
 import universal.announcements.InitClientToServer;
 import universal.announcements.ListClientsFiles;
 import com.google.gson.Gson;
+import universal.models.NextSyncTime;
 import universal.models.StateServer;
 
 
@@ -25,6 +26,10 @@ public class ConverterClassToJson {
 
     public static StateServer restoreStateServer(String communicate) {
         return (StateServer)restoreDefault(communicate, StateServer.class);
+    }
+
+    public static NextSyncTime restoreNextSyncTime(String communicate) {
+        return (NextSyncTime)restoreDefault(communicate, NextSyncTime.class);
     }
 
     private static Object restoreDefault(String communicate, Class<?> klasa) {

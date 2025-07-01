@@ -55,7 +55,7 @@ public class Client {
     }
 
     private boolean loginToServer( ) {
-        FormaterTerminalText.printServerComunicate("Server dostępny");
+        FormaterTerminalText.printServerComunicate("Nawiązuje połączenie");
         InitClientToServer initClientToServer = new InitClientToServer();
 
 
@@ -89,19 +89,12 @@ public class Client {
         communicateManager.sendCommunicate(loginDataJson);
 
         String ret = communicateManager.receiveCommunicate();
-        if(ret!=null && ret.equals(StateServer.CONNECTED.toString())) {
-            return true;
-        }
-
-        return false;
+        return ret != null && ret.equals(StateServer.CONNECTED.toString());
     }
 
     private boolean isServerBUSY( ) {
         String ret =communicateManager.receiveCommunicate();
-        if (ret!=null && ret.equals(StateServer.BUSY.toString() )) {
-            return true;
-        }
-        return false;
+        return ret != null && ret.equals(StateServer.BUSY.toString());
     }
 
     void waitToServerReady( ) {
@@ -116,9 +109,9 @@ public class Client {
         }
     }
 
-    void symulujPrace( ) {
+    void uspij(long ms) {
         try {
-            sleep(6000);
+            sleep(ms);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -126,6 +119,7 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
+
         FileManager fileManager = new FileManager("client_data");
 
         while( client.clientRuning ) {
@@ -163,9 +157,11 @@ public class Client {
             FormaterTerminalText.printNormal("Przesyłanie plików");
             client.sendAllFileToServer(fileManager, neededToSend.filesInformation);
 
-//            client.symulujPrace();
-            FormaterTerminalText.printServerComunicate("Komunikacja zakończona - sukcesem");
+            FormaterTerminalText.printSucess("Komunikacja zakończona - sukcesem");
 
+            String timeNextSync = client.communicateManager.receiveCommunicate();
+            FormaterTerminalText.printServerComunicate("Aplikacja zostanie uśpiona na " + timeNextSync + "s. do następnej synchronizacji" );
+            client.uspij(Integer.parseInt(timeNextSync));
             client.cleanUP();
         }
     }
@@ -179,9 +175,7 @@ public class Client {
         this.communicateManager.sendCommunicate(json);
     }
 
-    public void shutdown() {
-        clientRuning = false;
-    }
+
 
     private static void printList(List<FileInformation> list) {
         int index = 0;
@@ -211,6 +205,7 @@ public class Client {
         }while (stateComunication != StateServer.DONE);
     }
 
+
     private void cleanUP() {
         this.communicateManager.cleanUp();
         try {
@@ -221,5 +216,7 @@ public class Client {
         }
     }
 
-
+    public void shutdown() {
+        clientRuning = false;
+    }
 }
