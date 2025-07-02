@@ -8,47 +8,71 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.*;
 
+/**
+ * Klasa {@code CommunicateManager} zarządza komunikacją sieciową między klientem a serwerem.
+ * Umożliwia wysyłanie i odbieranie komunikatów tekstowych oraz przesyłanie plików podzielonych na części.
+ * Jest wykorzystywana przez {@code UserHandling} jak i {@code Client}
+ * <p>
+ * Konstruktor przyjmuje połączenie {@link Socket} i inicjalizuje strumienie wejścia i wyjścia.
+ */
 public class CommunicateManager {
     BufferedReader reader = null;
     PrintWriter writer;
     ObjectOutputStream oos;
     ObjectInputStream ois;
 
+    /**
+     * Tworzy nowy obiekt CommunicateManager, inicjalizując strumienie komunikacyjne na podstawie gniazda sieciowego.
+     *
+     * @param socket połączenie sieciowe {@link Socket}
+     */
     public CommunicateManager(Socket socket) {
         try {
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new PrintWriter(socket.getOutputStream(), true);
-            this.oos =new ObjectOutputStream(socket.getOutputStream());
+            this.oos = new ObjectOutputStream(socket.getOutputStream());
             this.ois = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             System.out.println("Nie udało się zainicjalizować wysyłania i odbierania komunikatów");
-
         }
     }
+
+    /**
+     * Odbiera komunikat tekstowy (jako pojedynczy wiersz) od drugiej strony połączenia.
+     *
+     * @return odebrany komunikat w formie {@link String}, lub null jeśli połączenie zostało utracone
+     */
     public String receiveCommunicate() {
-        String json ;
+        String json;
         try {
             json = reader.readLine();
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
             FormaterTerminalText.printFailure("Utracono połączenie");
-
             return null;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return json;
     }
 
+    /**
+     * Wysyła komunikat tekstowy do drugiej strony połączenia.
+     *
+     * @param comunicate komunikat do wysłania
+     * @return true jeśli wysłanie się powiodło, false w przypadku błędu
+     */
     public boolean sendCommunicate(String comunicate) {
         writer.println(comunicate);
-        if (writer.checkError()) {
-            return false;
-        }
-        return true;
+        return !writer.checkError();
     }
 
+    /**
+     * Wysyła plik podzielony na części {@link FilePart} przez strumień obiektowy.
+     *
+     * @param file     plik do wysłania
+     * @param filePath ścieżka pliku (używana w metadanych części)
+     * @return true jeśli wysłanie się powiodło, false w przypadku błędu lub zerwania połączenia
+     */
     public boolean sendFile(File file, String filePath) {
         long fileSize = file.length();
 
@@ -67,14 +91,20 @@ public class CommunicateManager {
         } catch (SocketException e) {
             FormaterTerminalText.printFailure("Połączenie zostało zerwane");
             return false;
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
         return true;
     }
 
-    public TreeMap<Integer, FilePart>  downloadPartsOfFile() throws SocketException {
+    /**
+     * Odbiera części pliku przesłane przez drugą stronę i łączy je w mapę uporządkowaną według numerów części.
+     *
+     * @return mapa z częściami pliku {@link FilePart} uporządkowana po numerze części, lub null w przypadku błędu
+     * @throws SocketException jeśli połączenie zostanie zerwane
+     */
+    public TreeMap<Integer, FilePart> downloadPartsOfFile() throws SocketException {
         TreeMap<Integer, FilePart> parts = new TreeMap<>();
         int expectedSize = -1;
 
@@ -91,11 +121,9 @@ public class CommunicateManager {
                 if (getTotalSize(parts) >= expectedSize) break;
             }
 
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
             throw e;
-        }
-        catch (ClassNotFoundException | IOException e) {
+        } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -103,13 +131,20 @@ public class CommunicateManager {
         return parts;
     }
 
-
-
+    /**
+     * Oblicza łączny rozmiar wszystkich części pliku.
+     *
+     * @param parts mapa części pliku
+     * @return łączny rozmiar w bajtach
+     */
     private static int getTotalSize(Map<Integer, FilePart> parts) {
         return parts.values().stream().mapToInt(p -> p.partSize).sum();
     }
 
-    public void cleanUp( ) {
+    /**
+     * Zamyka wszystkie strumienie używane do komunikacji.
+     */
+    public void cleanUp() {
         try {
             this.reader.close();
             this.writer.close();
@@ -118,7 +153,5 @@ public class CommunicateManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 }
-
