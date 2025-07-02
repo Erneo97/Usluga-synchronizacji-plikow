@@ -116,12 +116,15 @@ public class UserHandling implements Runnable {
         FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
 
         String com = communicateManager.receiveCommunicate();
-        if( com == StateServer.DONE.toString()) {
+        if( com.equals(StateServer.CONTINUE.toString())) {
             this.isClientConnectef = false;
         }
 
     }
 
+    /**
+     * Po wywołaniu następuje dokończenie komunikacji i zakończenie jej
+     */
     public boolean isClientConnectef() {
         return isClientConnectef;
     }

@@ -9,7 +9,8 @@ package universal.models;
  *   <li>{@link #READY} — serwer jest gotowy do obsługi nowych żądań.</li>
  *   <li>{@link #PERMISION_DENIED} — dostęp został odmówiony (brak uprawnień).</li>
  *   <li>{@link #CONNECTED} — nawiązano połączenie z klientem.</li>
- *   <li>{@link #DONE} — przesył plików została zakończona pomyślnie.</li>
+ *   <li>{@link #DONE} — przesył plików została zakończona pomyślnie. Bądź klient daje znać serwerowi że zostanie zamknięty a transmisja zakończona</li>
+ *   <li>{@link #CONTINUE} — potrzymanie komunikacji z klientem
  * </ul>
  */
 public enum StateServer {
@@ -18,4 +19,5 @@ public enum StateServer {
     PERMISION_DENIED,
     CONNECTED,
     DONE,
+    CONTINUE,
 }

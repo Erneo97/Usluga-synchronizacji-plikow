@@ -242,7 +242,7 @@ public class Client {
             String timeNextSync = client.communicateManager.receiveCommunicate();
             FormaterTerminalText.printServerComunicate(
                     "Uśpienie aplikacji na " + timeNextSync + "s. do kolejnej synchronizacji.");
-            client.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.CONNECTED.toString()));
+            client.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.CONTINUE.toString()));
 
             client.sleepSafely(Integer.parseInt(timeNextSync));
         }
