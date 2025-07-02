@@ -10,7 +10,7 @@ public class FilePart implements Serializable {
     /**
      * Maksymalny rozmiar fragmentu pliku w bajtach (16 KB).
      */
-    public static final int maxSizePart = 16 * 1024; // 16 KB
+    public static final int maxSizePart = 512 * 1024; // 512 KB
 
     /**
      * Rozmiar danych w tym fragmencie (w bajtach).
