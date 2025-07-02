@@ -1,104 +1,133 @@
 package server;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import database.User;
+import database.Manager_db;
+import universal.FormaterTerminalText;
+import universal.models.NextSyncTime;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.net.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
+import java.util.concurrent.*;
 
-
-
+/**
+ * Klasa {@code Server} odpowiada za uruchomienie serwera TCP,
+ * przyjmowanie połączeń od klientów oraz delegowanie ich obsługi do osobnych wątków.
+ *
+ * Serwer zarządza kolejką klientów i wykonuje synchronizację plików
+ * na podstawie częstotliwości ustalonej przez operatora.
+ */
 public class Server {
-    private final ThreadPoolExecutor executor;
+    /** Port nasłuchu serwera. */
     private final int port;
 
-    public Server(int port) {
-        this.port = port;
-        //    Init zarządzania wątkami
-        executor = new ThreadPoolExecutor(
-                0,                  // corePoolSize = 0 → wszystkie wątki mogą wygasać
-                10,                 // maximumPoolSize = 10
-                30,                 // keepAliveTime = 30
-                TimeUnit.SECONDS,
-                new SynchronousQueue<>() // bez kolejki – bezpośrednie przekazanie tasków
-        );
-        executor.allowCoreThreadTimeOut(true);
+    /** Kolejka klientów oczekujących na obsługę. */
+    private final BlockingQueue<UserHandling> usersWaiting;
 
+    /** Flaga oznaczająca, czy serwer działa. */
+    private boolean serverRunning;
+
+    /**
+     * Konstruktor klasy Server.
+     *
+     * @param port port, na którym serwer ma nasłuchiwać połączeń
+     */
+    public Server(int port) {
+        Manager_db.initDatabase();
+        usersWaiting = new LinkedBlockingQueue<>();
+        this.port = port;
+        this.serverRunning = true;
     }
 
+    /**
+     * Uruchamia osobny wątek do obsługi klientów pobranych z kolejki.
+     * Każdy klient obsługiwany jest synchronicznie (jeden po drugim).
+     */
+    private void handleWatingUsers() {
+        Thread handlerUsersThread = new Thread(() -> {
+            while (serverRunning) {
+                try {
+                    UserHandling user = usersWaiting.take();
+                    FormaterTerminalText.printServerComunicate("\t\tObsługuje nowego użytkownika");
+                    user.run();
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        });
+        handlerUsersThread.start();
+    }
 
+    /**
+     * Główna metoda uruchamiająca serwer:
+     * - Inicjalizuje gniazdo serwera,
+     * - Prosi użytkownika o wybór częstotliwości synchronizacji,
+     * - Oczekuje na połączenia od klientów,
+     * - Dodaje ich do kolejki oczekujących.
+     */
     void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Serwer nasłuchuje na porcie " + port);
+            FormaterTerminalText.printServerComunicate("Serwer nasłuchuje na porcie " + port);
 
-            while (!executor.isShutdown()) {
+            handleWatingUsers();
+
+            // Lista dostępnych opcji synchronizacji
+            NextSyncTime[] possibleTimeSync = {
+                    NextSyncTime.sec_5,
+                    NextSyncTime.sec_30,
+                    NextSyncTime.m_5,
+                    NextSyncTime.h_1
+            };
+
+            // Pobieranie wyboru synchronizacji od użytkownika
+            FormaterTerminalText.printTextInputs("Podaj częstotliwość komunikacji:\n  0 - 5s\n  1 - 30s" +
+                    "\n 2 - 5m\n  3 - 1h\nTwój wybór: ");
+            Scanner scanner = new Scanner(System.in);
+            int timIndex;
+            while ((timIndex = scanner.nextInt()) < 0 || timIndex > 3) {
+                FormaterTerminalText.printFailure("Nie poprawny zakres");
+            }
+
+            FormaterTerminalText.printTextInputs("Server został uruchomiony");
+
+            // Główna pętla nasłuchiwania i dodawania użytkowników
+            while (serverRunning) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Połączono z klientem: " + socket.getInetAddress());
 
-                executor.execute(new UserHandling(socket));
-
-
+                UserHandling newUser = new UserHandling(socket, possibleTimeSync[timIndex].getMilliseconds());
+                usersWaiting.put(newUser);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Zatrzymuje działanie serwera i przerywa główną pętlę nasłuchiwania.
+     */
     public void shutdown() {
-        executor.shutdown();
+        serverRunning = false;
     }
 
+    /**
+     * Metoda uruchomieniowa. Oczekuje jednego argumentu - portu,
+     * na którym ma działać serwer.
+     *
+     * @param args tablica argumentów (args[0] powinien zawierać numer portu)
+     */
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Użycie: java Server <port>");
+            FormaterTerminalText.printFailure("Neleży podać port w parametrach wywołania");
             return;
         }
 
         int port = Integer.parseInt(args[0]);
         Server server = new Server(port);
 
-
-        server.start();
-
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
 
+        server.start();
     }
-
-    void test_mapowanie_json() {
-        System.out.println("Rozpoczecie testu!!!");
-        Gson gson = new Gson();
-
-        User user = new User("192.168.2.1", "/", 234);
-        User user2 = new User("192.168.2.2", "/", 2343);
-
-
-
-        String json = gson.toJson(user);
-        System.out.println(json);
-
-        User userJson = gson.fromJson(json, User.class);
-        System.out.println(userJson);
-
-
-
-
-        System.out.println("test json Listy");
-        List<User> users = Arrays.asList(user, user2, user);
-
-        json = gson.toJson(users);
-        System.out.println("Lista json: " + json);
-
-        Type userListType = new TypeToken<List<User>>(){}.getType();
-        List<User> usersRet = gson.fromJson(json, userListType);
-        usersRet.forEach(u -> System.out.println(u));
-
-    }
-
 }
