@@ -48,8 +48,8 @@ public class Server {
                     NextSyncTime.m_5,
                     NextSyncTime.h_1
             };
-            FormaterTerminalText.printServerComunicate("Podaj częstotliwość komunikacji:\n  0 - 5s\n  1 - 30s" +
-                    "\n 2 - 5m\n  3 - 1h");
+            FormaterTerminalText.printTextInputs("Podaj częstotliwość komunikacji:\n  0 - 5s\n  1 - 30s" +
+                    "\n 2 - 5m\n  3 - 1h\nTwój wybór: ");
             Scanner scanner = new Scanner(System.in);
             int timIndex;
             while ((timIndex = scanner.nextInt()) < 0 || timIndex > 3 ) {

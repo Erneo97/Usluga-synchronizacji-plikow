@@ -64,14 +64,17 @@ public class CommunicateManager {
             }
             System.out.println("Wysłano część #" + partNumber);
             oos.flush();
-        } catch (IOException e) {
+        } catch (SocketException e) {
+            FormaterTerminalText.printFailure("Połączenie zostało zerwane");
+            return false;
+        }catch (IOException e) {
             e.printStackTrace();
             return false;
         }
         return true;
     }
 
-    public TreeMap<Integer, FilePart>  downloadPartsOfFile() {
+    public TreeMap<Integer, FilePart>  downloadPartsOfFile() throws SocketException {
         TreeMap<Integer, FilePart> parts = new TreeMap<>();
         int expectedSize = -1;
 
@@ -88,10 +91,15 @@ public class CommunicateManager {
                 if (getTotalSize(parts) >= expectedSize) break;
             }
 
-        } catch (ClassNotFoundException | IOException e) {
+        }
+        catch (SocketException e) {
+            throw e;
+        }
+        catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
             return null;
         }
+
         return parts;
     }
 

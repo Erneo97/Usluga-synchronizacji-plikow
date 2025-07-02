@@ -138,7 +138,7 @@ public class FileManager {
     }
 
     public boolean saveFileFromParts(Map<Integer, FilePart> parts) {
-        if (parts.isEmpty()) return false;
+        if (parts==null || parts.isEmpty()) return false;
 
         List<Integer> sortedKeys = new ArrayList<>(parts.keySet());
         Collections.sort(sortedKeys);

@@ -3,6 +3,7 @@ package server;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,7 +97,16 @@ public class UserHandling implements Runnable {
         if( !comunicate.filesInformation.isEmpty()) {
             FormaterTerminalText.printNormal("Pobranie " + comunicate.filesInformation.size() + " plików od klienta: " );
             for(int i=0; i<comunicate.filesInformation.size(); i++) {
-                TreeMap<Integer, FilePart> partsFile = communicateManager.downloadPartsOfFile();
+                TreeMap<Integer, FilePart> partsFile ;
+                try {
+                    partsFile = communicateManager.downloadPartsOfFile();
+                }
+                catch (SocketException se) {
+                    FormaterTerminalText.printFailure("Połączenie z klientem zostało zerwane");
+                    cleanUP();
+                    return;
+                }
+
                 fileManager.saveFileFromParts(partsFile);
             }
             fileManager.updateModificationDates(neededChangesFiles);
