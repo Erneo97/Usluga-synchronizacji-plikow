@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -19,23 +20,21 @@ import universal.ConverterClassToJson;
 import universal.managers.FileManager;
 
 import static java.lang.Thread.sleep;
+import java.util.regex.Pattern;
 
 public class Client {
     Socket socket = null;
     CommunicateManager communicateManager;
+    Scanner scanner = new Scanner(System.in);
     private boolean clientRuning = true;
 
+
+
     public boolean connectToServer() {
-        Scanner scanner = new Scanner(System.in);
-
         while (socket == null || !socket.isConnected()) {
-            FormaterTerminalText.printTextInputs("Podaj adres IP serwera: ");
-            String serverIP = scanner.nextLine();
+            String serverIP = inputIp();
 
-
-            FormaterTerminalText.printTextInputs("Podaj port serwera: ");
-            int port = scanner.nextInt();
-            scanner.nextLine();
+            int port = inputPort();
 
             // TODO: usunąć te dwie linie po zakonczeniu testów
             serverIP = "localhost";
@@ -53,6 +52,40 @@ public class Client {
         }
         return true;
     }
+
+    private String inputIp() {
+        Pattern ipPattern = Pattern.compile(
+                "^((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})\\.){3}" +
+                        "(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})$"
+        );
+
+        String serverIP;
+        do {
+            FormaterTerminalText.printTextInputs("Podaj adres IP serwera: ");
+            serverIP = scanner.nextLine();
+            if (!ipPattern.matcher(serverIP).matches()) {
+                FormaterTerminalText.printFailure("Niepoprawny adres IP. Spróbuj ponownie.");
+            }
+        } while (!ipPattern.matcher(serverIP).matches());
+        return serverIP;
+    }
+    private int inputPort() {
+        boolean correctNumber = false;
+        int port = 0;
+        do {
+            FormaterTerminalText.printTextInputs("Podaj numer portu: ");
+            try {
+                port = scanner.nextInt();
+                scanner.nextLine();
+                correctNumber = true;
+            } catch (InputMismatchException e) {
+                FormaterTerminalText.printFailure("Błąd: podaj poprawny numer portu (liczbę całkowitą).");
+                scanner.nextLine();
+            }
+        } while (!correctNumber);
+        return port;
+    }
+
 
     private boolean loginToServer( ) {
         FormaterTerminalText.printServerComunicate("Nawiązuje połączenie");
