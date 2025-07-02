@@ -10,13 +10,14 @@ public class Manager_db {
     private static boolean isInitialized = false;
 
 
-    public static void iniManager_db() {
-        System.out.println( "Inicjalizacja!");
+    public static void initDatabase() {
+        System.out.println( "Inicjalizacja - bazydanych");
         if (!isInitialized) {
             try {
                 Connection conn = DriverManager.getConnection(DB_URL);
                 System.out.println( "Tworzę table ");
                 createUsersTable();
+                isInitialized = true;
             } catch (SQLException e) {
 
             }
@@ -183,7 +184,7 @@ public class Manager_db {
 
 
     public static void main(String[] args) {
-        Manager_db.iniManager_db();
+        Manager_db.initDatabase();
 //        Manager_db.addUser("192.168.2.10", System.getProperty("user.dir") + "\\test");
 //        Manager_db.addUser("192.168.2.10", System.getProperty("user.dir") + "\\test2");
         System.out.println("Wszyscy użytkownicy z bazy danych:");

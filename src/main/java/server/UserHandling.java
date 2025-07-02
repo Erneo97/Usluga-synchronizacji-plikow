@@ -16,7 +16,6 @@ import universal.FilePart;
 import universal.FileStatusComparator;
 import universal.announcements.*;
 import universal.models.FileStatus;
-import universal.models.NextSyncTime;
 import universal.models.StateServer;
 import universal.models.TypeOfFile;
 

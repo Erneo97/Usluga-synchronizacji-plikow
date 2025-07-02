@@ -1,11 +1,11 @@
 package server;
 
+import database.Manager_db;
 import universal.FormaterTerminalText;
 import universal.models.NextSyncTime;
 
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -17,6 +17,7 @@ public class Server {
 
 
     public Server(int port) {
+        Manager_db.initDatabase();
         usersWaiting = new LinkedBlockingQueue<>();
         this.port = port;
         this.serverRunning = true;
@@ -57,6 +58,7 @@ public class Server {
             }
 
 
+            FormaterTerminalText.printTextInputs("Server został uruchomiony");
 
             while (serverRunning) {
                 Socket socket = serverSocket.accept();
