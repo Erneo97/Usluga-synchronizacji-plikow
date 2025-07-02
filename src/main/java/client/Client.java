@@ -51,10 +51,10 @@ public class Client {
     /* -------------------------------------------------- */
 
     /**
-     * Nawiązuje połączenie z serwerem. Pobiera adres IP i port od użytkownika,
-     * waliduje je, a następnie próbuje połączyć się w ciągu 5 s.
+     * Nawiązuje połączenie z serwerem. Pobiera adres IP i port od użytkownika,
+     * waliduje je, a następnie próbuje połączyć się w ciągu 5 s.
      *
-     * @return {@code true} gdy połączenie zostało ustanowione, w przeciwnym razie {@code false}
+     * @return {@code true} gdy połączenie zostało ustanowione, w przeciwnym razie {@code false}
      */
     public boolean connectToServer() {
         while (socket == null || !socket.isConnected()) {
@@ -78,9 +78,9 @@ public class Client {
     }
 
     /**
-     * Pobiera od użytkownika poprawny adres IP zgodny z IPv4.
+     * Pobiera od użytkownika poprawny adres IP zgodny z IPv4.
      *
-     * @return zweryfikowany adres IP
+     * @return zweryfikowany adres IP
      */
     private String inputIp() {
         Pattern ipPattern = Pattern.compile(
@@ -121,7 +121,7 @@ public class Client {
     }
 
     /**
-     * Wysyła dane logowania do serwera i oczekuje na potwierdzenie.
+     * Wysyła dane logowania do serwera i oczekuje na potwierdzenie.
      *
      * @return {@code true} jeśli serwer zaakceptował połączenie, w przeciwnym razie {@code false}
      */
@@ -196,11 +196,11 @@ public class Client {
         FileManager fileManager = new FileManager("client_data");
 
         while (client.clientRunning) {
-            // 1. Połącz z serwerem
+            // 1. Połącz z serwerem
             while (!client.connectToServer()) {
                 FormaterTerminalText.printNormal("Czekam na połączenie...");
             }
-            FormaterTerminalText.printServerComunicate("Połączono z serwerem.");
+            FormaterTerminalText.printServerComunicate("Połączono z serwerem.");
             client.waitForServerReady();
 
             // 2. Zaloguj się
@@ -230,13 +230,13 @@ public class Client {
             client.sendAllFileToServer(fileManager, needed.filesInformation);
             FormaterTerminalText.printSucess("Synchronizacja zakończona sukcesem.");
 
-            // 7. Odbierz czas kolejnej synchronizacji i uśpij aplikację
+            // 7. Odbierz czas kolejnej synchronizacji iuśpij aplikację
             String timeNextSync = client.communicateManager.receiveCommunicate();
             FormaterTerminalText.printServerComunicate(
-                    "Uśpienie aplikacji na " + timeNextSync + " s do kolejnej synchronizacji.");
+                    "Uśpienie aplikacji na " + timeNextSync + "s. do kolejnej synchronizacji.");
             client.sleepSafely(Integer.parseInt(timeNextSync) * 1_000L);
 
-            // 8. Porządki i kolejna iteracja
+            // 8. Porządki ikolejna iteracja
             client.cleanUp();
         }
     }
@@ -266,7 +266,7 @@ public class Client {
     }
 
     /**
-     * Wysyła wszystkie wymagane pliki do serwera i czeka na potwierdzenie DONE.
+     * Wysyła wszystkie wymagane pliki do serwera czeka na potwierdzenie DONE.
      */
     private void sendAllFileToServer(FileManager fm, List<FileInformation> needed) {
         if (needed.isEmpty()) {
