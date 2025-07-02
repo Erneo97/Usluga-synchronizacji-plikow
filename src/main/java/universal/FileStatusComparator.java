@@ -8,13 +8,19 @@ import java.util.*;
 public class FileStatusComparator {
 
     public static List<FileInformation> compare(List<FileInformation> clientList, List<FileInformation>  serverList) {
-        Map<String, FileInformation> serverMap = new HashMap<>();
+        List<FileInformation> result = new ArrayList<>();
 
+        if( serverList == null ) {
+            result.addAll(clientList);
+            return result;
+        }
+
+
+        Map<String, FileInformation> serverMap = new HashMap<>();
         for (FileInformation file : serverList) {
             serverMap.put(file.filePath, file);
         }
 
-        List<FileInformation> result = new ArrayList<>();
 
         for (FileInformation clientFile : clientList) {
             FileInformation serverFile = serverMap.remove(clientFile.filePath);

@@ -81,9 +81,9 @@ public class Client {
         }
 
 
-        // TODO: usunąc po testach
-        initClientToServer.ID  = 10;
-        initClientToServer.pathClientArchive = "/ala/ma/kota";
+//        // TODO: usunąc po testach
+//        initClientToServer.ID  = 10;
+//        initClientToServer.pathClientArchive = "/ala/ma/kota";
 
         String loginDataJson = ConverterClassToJson.convert(initClientToServer);
         communicateManager.sendCommunicate(loginDataJson);
