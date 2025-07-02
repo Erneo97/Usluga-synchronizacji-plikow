@@ -13,34 +13,57 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * Klasa {@code FileManager} służy do zarządzania plikami i katalogami
+ * w określonym katalogu głównym.
+ * <p>
+ * Umożliwia pobieranie informacji o plikach, tworzenie i usuwanie katalogów i plików,
+ * aktualizację dat modyfikacji, przenoszenie plików oraz zapisywanie plików
+ * przesłanych w częściach.
+ */
 public class FileManager {
+
+    /** Ścieżka do katalogu głównego, którym zarządza FileManager. */
     private String mainDirPath;
 
+    /**
+     * Tworzy menedżera plików dla wskazanego katalogu głównego.
+     *
+     * @param mainDirPath ścieżka do katalogu głównego
+     */
     public FileManager(String mainDirPath) {
         this.mainDirPath = mainDirPath;
     }
 
-    public void  printFileInformation(File file) {
+    /**
+     * Wypisuje informacje o podanym pliku lub katalogu: typ (plik/katalog), nazwę,
+     * ścieżkę, datę ostatniej modyfikacji i rozmiar.
+     *
+     * @param file plik lub katalog do wyświetlenia informacji
+     */
+    public void printFileInformation(File file) {
         System.out.println((file.isDirectory() ? "[DIR] " : "[FILE] ")
                 + file.getName() + "  " + file.getPath() + "  " + new Date(file.lastModified()) + "  " + file.length());
     }
 
-    @Deprecated
-    private void print_all_files() {
-        File[] entries = getListOfFiles();
-        if (entries != null) {
-            System.out.println("dir / file    name   path    last modified");
-            for (File entry : entries) {
-                printFileInformation(entry);
-            }
-        }
-    }
-
+    /**
+     * Pobiera obiekt {@link File} o podanej nazwie w katalogu głównym.
+     *
+     * @param fileName nazwa pliku
+     * @return obiekt File wskazujący na plik/katalog w katalogu głównym
+     */
     public File getFile(String fileName) {
         String projectRootPath = System.getProperty("user.dir");
         return new File(projectRootPath + File.separator + this.mainDirPath + File.separator + fileName);
     }
 
+    /**
+     * Zwraca listę informacji o wszystkich plikach i podkatalogach w katalogu głównym
+     * oraz rekurencyjnie o ich zawartości.
+     *
+     * @return lista obiektów {@link FileInformation} z informacjami o plikach,
+     *         lub null, jeśli katalog jest pusty lub nie istnieje
+     */
     public List<FileInformation> getListOfFilesInformation() {
         File[] entries = getListOfFiles();
         if (entries == null) {
@@ -55,6 +78,12 @@ public class FileManager {
         return list;
     }
 
+    /**
+     * Rekurencyjnie dodaje plik i jego podpliki/podkatalogi do listy informacji.
+     *
+     * @param file plik lub katalog do dodania
+     * @param list lista, do której dodawane są informacje
+     */
     private void addFileAndSubfiles(File file, List<FileInformation> list) {
         FileInformation information = getInformationFromFile(file);
         list.add(information);
@@ -69,6 +98,12 @@ public class FileManager {
         }
     }
 
+    /**
+     * Tworzy obiekt {@link FileInformation} z informacji o pliku lub katalogu.
+     *
+     * @param file plik/katalog źródłowy
+     * @return obiekt z informacjami o pliku
+     */
     private FileInformation getInformationFromFile(File file) {
         this.mainDirPath = this.mainDirPath.replace('/', '\\');
         FileInformation information = new FileInformation();
@@ -82,25 +117,22 @@ public class FileManager {
         return information;
     }
 
-
+    /**
+     * Zwraca tablicę plików i katalogów z katalogu głównego.
+     *
+     * @return tablica plików lub null jeśli katalog nie istnieje lub jest pusty
+     */
     private File[] getListOfFiles() {
         File managedDirectory = new File(mainDirPath);
-        File[] entries = managedDirectory.listFiles();
-        return entries;
+        return managedDirectory.listFiles();
     }
 
-    public static void main(String[] args) {
-        FileManager fm = new FileManager("server");
-        List<FileInformation> info = fm.getListOfFilesInformation();
-        System.out.println(info);
-
-        ListClientsFiles listClientsFiles = new ListClientsFiles();
-        listClientsFiles.ID = 1;
-        listClientsFiles.filesInformation = info;
-
-
-    }
-
+    /**
+     * Tworzy katalog o podanej ścieżce (wraz z rodzicami, jeśli nie istnieją).
+     *
+     * @param path ścieżka do nowego katalogu
+     * @return true jeśli katalog został utworzony, false jeśli już istniał
+     */
     public boolean createDirectory(String path) {
         File dir = new File(path);
         if (!dir.exists()) {
@@ -109,6 +141,12 @@ public class FileManager {
         return false;
     }
 
+    /**
+     * Usuwa katalog wraz z całą zawartością.
+     *
+     * @param path ścieżka do katalogu
+     * @throws IOException w przypadku problemów z usuwaniem plików
+     */
     public static void deleteDirectory(Path path) throws IOException {
         if (Files.exists(path)) {
             Files.walk(path)
@@ -118,7 +156,12 @@ public class FileManager {
         }
     }
 
-
+    /**
+     * Usuwa plik lub katalog (rekurencyjnie) o podanej ścieżce względem katalogu głównego.
+     *
+     * @param filePath ścieżka względna pliku/katalogu
+     * @return true jeśli usunięto, false jeśli plik/katalog nie istniał
+     */
     public boolean deleteFile(String filePath) {
         File file = getFile(filePath);
 
@@ -137,8 +180,14 @@ public class FileManager {
         return file.delete();
     }
 
+    /**
+     * Zapisuje plik z części przesłanych w mapie (klucz - numer części, wartość - {@link FilePart}).
+     *
+     * @param parts mapa części pliku do zapisania
+     * @return true jeśli zapis powiódł się, false w przypadku błędów lub pustej mapy
+     */
     public boolean saveFileFromParts(Map<Integer, FilePart> parts) {
-        if (parts==null || parts.isEmpty()) return false;
+        if (parts == null || parts.isEmpty()) return false;
 
         List<Integer> sortedKeys = new ArrayList<>(parts.keySet());
         Collections.sort(sortedKeys);
@@ -159,9 +208,14 @@ public class FileManager {
         }
     }
 
-    public boolean createDir( String fullPath) {
+    /**
+     * Tworzy katalogi rodziców dla podanej pełnej ścieżki pliku, jeśli nie istnieją.
+     *
+     * @param fullPath pełna ścieżka pliku, dla którego mają być utworzone katalogi
+     * @return true jeśli katalogi są już utworzone lub zostały utworzone poprawnie, false w przeciwnym razie
+     */
+    public boolean createDir(String fullPath) {
         File file = new File(fullPath);
-
 
         File parentDir = file.getParentFile();
         if (!parentDir.exists()) {
@@ -174,6 +228,11 @@ public class FileManager {
         return true;
     }
 
+    /**
+     * Aktualizuje daty modyfikacji plików na podstawie listy informacji {@link FileInformation}.
+     *
+     * @param list lista obiektów z informacjami o plikach, zawierająca daty do ustawienia
+     */
     public void updateModificationDates(List<FileInformation> list) {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
@@ -198,7 +257,14 @@ public class FileManager {
         }
     }
 
-    public  boolean moveFile(String sourcePath, String targetPath) {
+    /**
+     * Przenosi plik z jednej ścieżki do drugiej w katalogu głównym, tworząc katalogi docelowe jeśli nie istnieją.
+     *
+     * @param sourcePath ścieżka źródłowa względem katalogu głównego
+     * @param targetPath ścieżka docelowa względem katalogu głównego
+     * @return true jeśli przeniesienie się powiodło, false w przypadku błędów
+     */
+    public boolean moveFile(String sourcePath, String targetPath) {
         Path source = Paths.get(this.mainDirPath + File.separator + sourcePath);
         Path target = Paths.get(this.mainDirPath + File.separator + targetPath);
 
@@ -212,5 +278,4 @@ public class FileManager {
             return false;
         }
     }
-
 }
