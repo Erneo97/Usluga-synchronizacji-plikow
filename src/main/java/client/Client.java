@@ -36,7 +36,6 @@ import static java.lang.Thread.sleep;
  * </p>
  */
 public class Client {
-
     /** Socket TCP używany do komunikacji z serwerem. */
     private Socket socket;
     /** Manager komunikatów JSON–>Java i Java–>JSON. */
@@ -61,9 +60,9 @@ public class Client {
             String serverIP = inputIp();
             int port = inputPort();
 
-            // TODO: usunąć po zakończeniu testów (wartości wymuszone)
-            serverIP = "localhost";
-            port = 1234;
+//            // TODO: usunąć po zakończeniu testów (wartości wymuszone)
+//            serverIP = "localhost";
+//            port = 1234;
 
             try {
                 socket = new Socket();
@@ -191,11 +190,15 @@ public class Client {
     /*  MAIN LOOP                                         */
     /* -------------------------------------------------- */
 
+
     public static void main(String[] args) {
         Client client = new Client();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            client.runOff();
+        }));
         FileManager fileManager = new FileManager("client_data");
 
-        while (client.clientRunning) {
+        while ( client.clientRunning ) {
             // 1. Połącz z serwerem
             while (!client.connectToServer()) {
                 FormaterTerminalText.printNormal("Czekam na połączenie...");
@@ -226,19 +229,24 @@ public class Client {
             printList(needed.filesInformation);
 
             // 6. Wyślij brakujące pliki
-            FormaterTerminalText.printNormal("Przesyłanie plików...");
-            client.sendAllFileToServer(fileManager, needed.filesInformation);
-            FormaterTerminalText.printSucess("Synchronizacja zakończona sukcesem.");
+            if( !needed.filesInformation.isEmpty()) {
+                FormaterTerminalText.printNormal("Przesyłanie plików...");
+                client.sendAllFileToServer(fileManager, needed.filesInformation);
+                FormaterTerminalText.printSucess("Synchronizacja zakończona sukcesem.");
+            }
+            else {
+                FormaterTerminalText.printNormal("Brak plików do przesłania");
+            }
 
             // 7. Odbierz czas kolejnej synchronizacji iuśpij aplikację
             String timeNextSync = client.communicateManager.receiveCommunicate();
             FormaterTerminalText.printServerComunicate(
                     "Uśpienie aplikacji na " + timeNextSync + "s. do kolejnej synchronizacji.");
-            client.sleepSafely(Integer.parseInt(timeNextSync) * 1_000L);
+            client.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.CONNECTED.toString()));
 
-            // 8. Porządki ikolejna iteracja
-            client.cleanUp();
+            client.sleepSafely(Integer.parseInt(timeNextSync));
         }
+        client.cleanUp();
     }
 
     /* -------------------------------------------------- */
@@ -254,7 +262,10 @@ public class Client {
         first.ID = Integer.parseInt(idFromServer);
         communicateManager.sendCommunicate(ConverterClassToJson.convert(first));
     }
-
+    void runOff() {
+        this.clientRunning = false;
+        this.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.DONE.toString()));
+    }
     /**
      * Wypisuje listę plików na konsolę.
      */

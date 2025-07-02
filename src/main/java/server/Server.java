@@ -9,6 +9,8 @@ import java.net.*;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Klasa {@code Server} odpowiada za uruchomienie serwera TCP,
  * przyjmowanie połączeń od klientów oraz delegowanie ich obsługi do osobnych wątków.
@@ -42,13 +44,29 @@ public class Server {
      * Uruchamia osobny wątek do obsługi klientów pobranych z kolejki.
      * Każdy klient obsługiwany jest synchronicznie (jeden po drugim).
      */
-    private void handleWatingUsers() {
+    private void handleWatingUsers(long delay) {
         Thread handlerUsersThread = new Thread(() -> {
             while (serverRunning) {
                 try {
                     UserHandling user = usersWaiting.take();
                     FormaterTerminalText.printServerComunicate("\t\tObsługuje nowego użytkownika");
                     user.run();
+                    if( !user.isClientConnectef() ) {
+                        user.cleanUP();
+                    }
+                    else {
+                        Thread thread = new Thread(() -> {
+                            try {
+                                sleep(delay);
+                                usersWaiting.put(user);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                        });
+                        thread.start();
+                    }
+
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -68,7 +86,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             FormaterTerminalText.printServerComunicate("Serwer nasłuchuje na porcie " + port);
 
-            handleWatingUsers();
+
 
             // Lista dostępnych opcji synchronizacji
             NextSyncTime[] possibleTimeSync = {
@@ -86,7 +104,7 @@ public class Server {
             while ((timIndex = scanner.nextInt()) < 0 || timIndex > 3) {
                 FormaterTerminalText.printFailure("Nie poprawny zakres");
             }
-
+            handleWatingUsers( possibleTimeSync[timIndex].getMilliseconds());
             FormaterTerminalText.printTextInputs("Server został uruchomiony");
 
             // Główna pętla nasłuchiwania i dodawania użytkowników
@@ -95,6 +113,7 @@ public class Server {
                 System.out.println("Połączono z klientem: " + socket.getInetAddress());
 
                 UserHandling newUser = new UserHandling(socket, possibleTimeSync[timIndex].getMilliseconds());
+
                 usersWaiting.put(newUser);
             }
         } catch (IOException ex) {

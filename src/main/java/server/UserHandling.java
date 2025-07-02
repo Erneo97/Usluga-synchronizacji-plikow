@@ -30,6 +30,7 @@ public class UserHandling implements Runnable {
     private FileManager fileManager;
     private String userHomePath;
     private final long timeSync;
+    private boolean isClientConnectef ;
 
     /**
      * Konstruktor klasy UserHandling
@@ -42,6 +43,7 @@ public class UserHandling implements Runnable {
         this.communicateManager = new CommunicateManager(socket);
         communicateManager.sendCommunicate(StateServer.BUSY.toString());
         this.timeSync = timeSync;
+        this.isClientConnectef = true;
     }
 
     /**
@@ -91,7 +93,7 @@ public class UserHandling implements Runnable {
         communicateManager.sendCommunicate(ConverterClassToJson.convert(comunicate));
 
         if (!comunicate.filesInformation.isEmpty()) {
-            for (FileInformation fileInfo : comunicate.filesInformation) {
+            for (FileInformation fileInfo : neededChangesFiles) {
                 TreeMap<Integer, FilePart> partsFile;
                 try {
                     partsFile = communicateManager.downloadPartsOfFile();
@@ -104,12 +106,24 @@ public class UserHandling implements Runnable {
                 fileManager.saveFileFromParts(partsFile);
             }
             fileManager.updateModificationDates(neededChangesFiles);
+            communicateManager.sendCommunicate(StateServer.DONE.toString());
+
+
         }
 
-        communicateManager.sendCommunicate(StateServer.DONE.toString());
+
         communicateManager.sendCommunicate(String.valueOf(this.timeSync));
         FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
-        cleanUP();
+
+        String com = communicateManager.receiveCommunicate();
+        if( com == StateServer.DONE.toString()) {
+            this.isClientConnectef = false;
+        }
+
+    }
+
+    public boolean isClientConnectef() {
+        return isClientConnectef;
     }
 
     /**
@@ -237,7 +251,7 @@ public class UserHandling implements Runnable {
     /**
      * Czyści zasoby po zakończeniu komunikacji z klientem.
      */
-    private void cleanUP() {
+    public void cleanUP() {
         this.communicateManager.cleanUp();
         try {
             socket.close();
