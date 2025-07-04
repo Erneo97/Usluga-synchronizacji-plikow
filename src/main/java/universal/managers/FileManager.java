@@ -208,6 +208,34 @@ public class FileManager {
         }
     }
 
+
+    static FileOutputStream fos;
+    static long currentFileSize;
+    public boolean savePartstoFile(FilePart part, String fileName, int index ) {
+        String fullPath = this.mainDirPath + File.separator + fileName;
+
+        try  {
+            if( index == 0) {
+                if( fos != null ) {
+                    fos.close();
+                }
+                fos = new FileOutputStream(fullPath);
+            }
+            currentFileSize += part.partSize;
+            fos.write(part.data, 0, part.partSize);
+
+            if( currentFileSize >= part.fullSizeOfFile) {
+                currentFileSize = part.fullSizeOfFile;
+                fos.close();
+            }
+
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     /**
      * Tworzy katalogi rodziców dla podanej pełnej ścieżki pliku, jeśli nie istnieją.
      *
