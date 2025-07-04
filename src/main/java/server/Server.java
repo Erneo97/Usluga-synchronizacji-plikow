@@ -67,7 +67,7 @@ public class Server {
                         thread.start();
                     }
 
-                } catch (InterruptedException e) {
+                } catch (InterruptedException  e) {
                     break;
                 }
             }
@@ -105,7 +105,7 @@ public class Server {
                 FormaterTerminalText.printFailure("Nie poprawny zakres");
             }
             handleWatingUsers( possibleTimeSync[timIndex].getMilliseconds());
-            FormaterTerminalText.printTextInputs("Server został uruchomiony");
+            FormaterTerminalText.printServerComunicate("Server został uruchomiony");
 
             // Główna pętla nasłuchiwania i dodawania użytkowników
             while (serverRunning) {
