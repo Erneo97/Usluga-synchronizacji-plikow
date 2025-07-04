@@ -233,7 +233,7 @@ public class Client {
                 if( !needed.filesInformation.isEmpty()) {
                     FormaterTerminalText.printNormal("Przesyłanie plików...");
                     client.sendAllFileToServer(fileManager, needed.filesInformation);
-                    FormaterTerminalText.printSucess("Synchronizacja zakończona sukcesem.");
+                    FormaterTerminalText.printSucess("\nSynchronizacja zakończona sukcesem.");
                 }
                 else {
                     FormaterTerminalText.printNormal("Brak plików do przesłania");
