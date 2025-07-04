@@ -20,7 +20,7 @@ public class CommunicateManager {
     PrintWriter writer;
     ObjectOutputStream oos;
     ObjectInputStream ois;
-
+    Socket socket;
     /**
      * Tworzy nowy obiekt CommunicateManager, inicjalizując strumienie komunikacyjne na podstawie gniazda sieciowego.
      *
@@ -28,6 +28,7 @@ public class CommunicateManager {
      */
     public CommunicateManager(Socket socket) {
         try {
+            this.socket = socket;
             this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.writer = new PrintWriter(socket.getOutputStream(), true);
             this.oos = new ObjectOutputStream(socket.getOutputStream());
@@ -77,17 +78,21 @@ public class CommunicateManager {
         long fileSize = file.length();
 
         try (FileInputStream fis = new FileInputStream(file)) {
-            byte[] buffer = new byte[FilePart.maxSizePart];
+            byte[] buffer = new byte[ FilePart.maxSizePart];
             int bytesRead;
             int partNumber = 0;
-
+            double numberOfAllParts = Math.ceil(file.length() /FilePart.maxSizePart);
             while ((bytesRead = fis.read(buffer)) != -1) {
                 byte[] dataCopy = Arrays.copyOf(buffer, bytesRead);
                 FilePart part = new FilePart(dataCopy, bytesRead, (int) fileSize, partNumber++, filePath);
                 oos.writeObject(part);
+                FormaterTerminalText.printprogressBar("Stan przesyłu "+ part.pathFile + ": ", partNumber+1, (int)numberOfAllParts-1);
+
+                System.gc();
             }
-            System.out.println("Wysłano część #" + partNumber);
-            oos.flush();
+
+            if (!this.socket.isClosed())
+                oos.flush();
         } catch (SocketException e) {
             FormaterTerminalText.printFailure("Połączenie zostało zerwane");
             return false;

@@ -1,5 +1,6 @@
 package universal;
 
+import server.LostConnectExeption;
 import universal.announcements.InitClientToServer;
 import universal.announcements.ListClientsFiles;
 import com.google.gson.Gson;
@@ -30,7 +31,7 @@ public class ConverterClassToJson {
      * @param communicate JSON do deserializacji
      * @return odtworzony obiekt ListClientsFiles
      */
-    public static ListClientsFiles restoreFileInformation(String communicate) {
+    public static ListClientsFiles restoreFileInformation(String communicate) throws LostConnectExeption {
         return (ListClientsFiles) restoreDefault(communicate, ListClientsFiles.class);
     }
 
@@ -40,7 +41,7 @@ public class ConverterClassToJson {
      * @param communicate JSON do deserializacji
      * @return odtworzony obiekt InitClientToServer
      */
-    public static InitClientToServer restoreInitClientToServer(String communicate) {
+    public static InitClientToServer restoreInitClientToServer(String communicate) throws LostConnectExeption  {
         return (InitClientToServer) restoreDefault(communicate, InitClientToServer.class);
     }
 
@@ -50,7 +51,7 @@ public class ConverterClassToJson {
      * @param communicate JSON do deserializacji
      * @return odtworzony enum StateServer
      */
-    public static StateServer restoreStateServer(String communicate) {
+    public static StateServer restoreStateServer(String communicate) throws LostConnectExeption {
         return (StateServer) restoreDefault(communicate, StateServer.class);
     }
 
@@ -60,7 +61,7 @@ public class ConverterClassToJson {
      * @param communicate JSON do deserializacji
      * @return odtworzony enum NextSyncTime
      */
-    public static NextSyncTime restoreNextSyncTime(String communicate) {
+    public static NextSyncTime restoreNextSyncTime(String communicate) throws LostConnectExeption {
         return (NextSyncTime) restoreDefault(communicate, NextSyncTime.class);
     }
 
@@ -71,7 +72,10 @@ public class ConverterClassToJson {
      * @param klasa klasa docelowego typu
      * @return odtworzony obiekt typu podanego jako parametr
      */
-    private static Object restoreDefault(String communicate, Class<?> klasa) {
+    private static Object restoreDefault(String communicate, Class<?> klasa) throws LostConnectExeption {
+        if(communicate == null || communicate.equals(StateServer.FORCED_END.toString()))
+            throw new LostConnectExeption("No client");
+
         Gson gson = new Gson();
         return gson.fromJson(communicate, klasa);
     }

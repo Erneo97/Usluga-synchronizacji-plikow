@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import server.LostConnectExeption;
 import universal.FormaterTerminalText;
 import universal.ConverterClassToJson;
 import universal.announcements.FileInformation;
@@ -197,55 +198,60 @@ public class Client {
             client.runOff();
         }));
         FileManager fileManager = new FileManager("client_data");
+        try {
+            while ( client.clientRunning ) {
+                // 1. Połącz z serwerem
+                while (!client.connectToServer()) {
+                    FormaterTerminalText.printNormal("Czekam na połączenie...");
+                }
+                FormaterTerminalText.printServerComunicate("Połączono z serwerem.");
+                client.waitForServerReady();
 
-        while ( client.clientRunning ) {
-            // 1. Połącz z serwerem
-            while (!client.connectToServer()) {
-                FormaterTerminalText.printNormal("Czekam na połączenie...");
+                // 2. Zaloguj się
+                while (!client.loginToServer()) {
+                    FormaterTerminalText.printFailure("Błędne dane logowania. Ponów próbę.");
+                }
+                FormaterTerminalText.printSucess("Poprawnie zalogowano na serwer.");
+                String idFromServer = client.communicateManager.receiveCommunicate();
+
+                // 3. Odczytaj listę lokalnych plików
+                FormaterTerminalText.printNormal("Odczytuję twój zbiór lokalny...");
+                List<FileInformation> localFiles = fileManager.getListOfFilesInformation();
+                FormaterTerminalText.printNormal("Twoja lista plików:");
+                printList(localFiles);
+
+                // 4. Wyślij listę plików do serwera
+                client.sendInitialListToServer(localFiles, idFromServer);
+
+                // 5. Odbierz listę brakujących plików
+                String neededJson = client.communicateManager.receiveCommunicate();
+                ListClientsFiles needed = ConverterClassToJson.restoreFileInformation(neededJson);
+                FormaterTerminalText.printServerComunicate("Brakujące pliki po stronie serwera:");
+                printList(needed.filesInformation);
+
+                // 6. Wyślij brakujące pliki
+                if( !needed.filesInformation.isEmpty()) {
+                    FormaterTerminalText.printNormal("Przesyłanie plików...");
+                    client.sendAllFileToServer(fileManager, needed.filesInformation);
+                    FormaterTerminalText.printSucess("\nSynchronizacja zakończona sukcesem.");
+                }
+                else {
+                    FormaterTerminalText.printNormal("Brak plików do przesłania");
+                }
+
+                // 7. Odbierz czas kolejnej synchronizacji iuśpij aplikację
+                String timeNextSync = client.communicateManager.receiveCommunicate();
+                FormaterTerminalText.printServerComunicate(
+                        "Uśpienie aplikacji na " + (Integer.parseUnsignedInt(timeNextSync) / 1000) + "s. do kolejnej synchronizacji.");
+                client.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.CONTINUE.toString()));
+
+                client.sleepSafely(Integer.parseInt(timeNextSync));
             }
-            FormaterTerminalText.printServerComunicate("Połączono z serwerem.");
-            client.waitForServerReady();
-
-            // 2. Zaloguj się
-            while (!client.loginToServer()) {
-                FormaterTerminalText.printFailure("Błędne dane logowania. Ponów próbę.");
-            }
-            FormaterTerminalText.printSucess("Poprawnie zalogowano na serwer.");
-            String idFromServer = client.communicateManager.receiveCommunicate();
-
-            // 3. Odczytaj listę lokalnych plików
-            FormaterTerminalText.printNormal("Odczytuję twój zbiór lokalny...");
-            List<FileInformation> localFiles = fileManager.getListOfFilesInformation();
-            FormaterTerminalText.printNormal("Twoja lista plików:");
-            printList(localFiles);
-
-            // 4. Wyślij listę plików do serwera
-            client.sendInitialListToServer(localFiles, idFromServer);
-
-            // 5. Odbierz listę brakujących plików
-            String neededJson = client.communicateManager.receiveCommunicate();
-            ListClientsFiles needed = ConverterClassToJson.restoreFileInformation(neededJson);
-            FormaterTerminalText.printServerComunicate("Brakujące pliki po stronie serwera:");
-            printList(needed.filesInformation);
-
-            // 6. Wyślij brakujące pliki
-            if( !needed.filesInformation.isEmpty()) {
-                FormaterTerminalText.printNormal("Przesyłanie plików...");
-                client.sendAllFileToServer(fileManager, needed.filesInformation);
-                FormaterTerminalText.printSucess("Synchronizacja zakończona sukcesem.");
-            }
-            else {
-                FormaterTerminalText.printNormal("Brak plików do przesłania");
-            }
-
-            // 7. Odbierz czas kolejnej synchronizacji iuśpij aplikację
-            String timeNextSync = client.communicateManager.receiveCommunicate();
-            FormaterTerminalText.printServerComunicate(
-                    "Uśpienie aplikacji na " + timeNextSync + "s. do kolejnej synchronizacji.");
-            client.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.CONTINUE.toString()));
-
-            client.sleepSafely(Integer.parseInt(timeNextSync));
         }
+        catch (LostConnectExeption e) {
+            FormaterTerminalText.printFailure("Utracono półączenie z serwerem - kończę prace");
+        }
+
         client.cleanUp();
     }
 
@@ -262,10 +268,7 @@ public class Client {
         first.ID = Integer.parseInt(idFromServer);
         communicateManager.sendCommunicate(ConverterClassToJson.convert(first));
     }
-    void runOff() {
-        this.clientRunning = false;
-        this.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.DONE.toString()));
-    }
+
     /**
      * Wypisuje listę plików na konsolę.
      */
@@ -279,7 +282,7 @@ public class Client {
     /**
      * Wysyła wszystkie wymagane pliki do serwera czeka na potwierdzenie DONE.
      */
-    private void sendAllFileToServer(FileManager fm, List<FileInformation> needed) {
+    private void sendAllFileToServer(FileManager fm, List<FileInformation> needed) throws LostConnectExeption {
         if (needed.isEmpty()) {
             FormaterTerminalText.printServerComunicate("Brak plików do aktualizacji.");
         } else {
@@ -305,7 +308,10 @@ public class Client {
      * Czyści zasoby komunikacyjne.
      */
     private void cleanUp() {
-        if (communicateManager != null) communicateManager.cleanUp();
+        if (communicateManager != null) {
+            communicateManager.cleanUp();
+        }
+
         if (socket != null) {
             try {
                 socket.close();
@@ -318,7 +324,8 @@ public class Client {
     /**
      * Zatrzymuje główną pętlę klienta (wywoływane np. przez shutdown hook).
      */
-    public void shutdown() {
-        clientRunning = false;
+    void runOff() {
+        this.clientRunning = false;
+        this.communicateManager.sendCommunicate(ConverterClassToJson.convert(StateServer.FORCED_END.toString()));
     }
 }

@@ -86,4 +86,17 @@ public class FormaterTerminalText {
     public static void printTextInputs(String text) {
         System.out.print(ANSI_CYAN + ANSI_BOLD + text + ANSI_UNBOLD + ANSI_RESET);
     }
+
+    public static void printprogressBar(String text, int progress, int max)  {
+        if( progress < max ) {
+            double procent = progress * 100.0 /max;
+            System.out.print("\r" + " ".repeat(80) + "\r");
+            System.out.print(text +  progress + "/" + max + " " + loadBar(procent, 20) + "  " + String.format("%.2f", procent) + "%" );
+
+        }
+    }
+    private  static String loadBar(double procent, int width) {
+        int countDot = (int)(procent * width / 100);
+        return "[" + ".".repeat(countDot) + " ".repeat(width-countDot) + "]";
+    }
 }

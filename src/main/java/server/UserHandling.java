@@ -51,75 +51,75 @@ public class UserHandling implements Runnable {
      * Realizuje proces logowania, synchronizacji danych oraz zakończenia sesji.
      */
     @Override
-    public void run() {
-        communicateManager.sendCommunicate(StateServer.READY.toString());
-
-        String initJsonFromClient = communicateManager.receiveCommunicate();
-        InitClientToServer loginData = ConverterClassToJson.restoreInitClientToServer(initJsonFromClient);
-
+    public void run(){
         try {
-            logInUser(loginData);
-        } catch (NullPointerException e) {
-            return;
-        }
+            communicateManager.sendCommunicate(StateServer.READY.toString());
 
-        FormaterTerminalText.printSucess("Poprawnie zalogowany użytkownik " + loginData.ID);
-        communicateManager.sendCommunicate(StateServer.CONNECTED.toString());
-        communicateManager.sendCommunicate(String.valueOf(loginData.ID));
+            String initJsonFromClient = communicateManager.receiveCommunicate();
+            InitClientToServer loginData = ConverterClassToJson.restoreInitClientToServer(initJsonFromClient);
 
-        this.userHomePath = usersDirPath + loginData.ID + loginData.pathClientArchive.replace('/', '\\');
-        this.fileManager = new FileManager(this.userHomePath);
-
-        String filesListJsonFromClient = communicateManager.receiveCommunicate();
-        ListClientsFiles comunicate = ConverterClassToJson.restoreFileInformation(filesListJsonFromClient);
-
-        List<FileInformation> localFiles = this.fileManager.getListOfFilesInformation();
-        List<FileInformation> neededChangesFiles = FileStatusComparator.compare(comunicate.filesInformation, localFiles);
-
-        Map<FileStatus, List<FileInformation>> separated = classifyActionOnGivenFile(neededChangesFiles);
-        List<FileInformation> listFilesToDelete = separated.get(FileStatus.DELETE);
-        neededChangesFiles = separated.get(FileStatus.SEND);
-
-        List<FileInformation> movedFile = searchMovedFiled(listFilesToDelete, neededChangesFiles);
-
-        FormaterTerminalText.printServerComunicate("\nZmiany dla serwera: ");
-        FormaterTerminalText.printNormal("\tPliki do przeniesienia: ");
-        printList(movedFile);
-        FormaterTerminalText.printNormal("\tPliki do usunięcia: ");
-        printList(listFilesToDelete);
-        deleteUnnecessaryFiles(listFilesToDelete);
-
-        comunicate.filesInformation = neededChangesFiles;
-        communicateManager.sendCommunicate(ConverterClassToJson.convert(comunicate));
-
-        if (!comunicate.filesInformation.isEmpty()) {
-            for (FileInformation fileInfo : neededChangesFiles) {
-                TreeMap<Integer, FilePart> partsFile;
-                try {
-                    partsFile = communicateManager.downloadPartsOfFile();
-                } catch (SocketException se) {
-                    FormaterTerminalText.printFailure("Połączenie z klientem zostało zerwane");
-                    cleanUP();
-                    return;
-                }
-
-                fileManager.saveFileFromParts(partsFile);
+            try {
+                logInUser(loginData);
+            } catch (NullPointerException e) {
+                return;
             }
-            fileManager.updateModificationDates(neededChangesFiles);
-            communicateManager.sendCommunicate(StateServer.DONE.toString());
 
+            FormaterTerminalText.printSucess("Poprawnie zalogowany użytkownik " + loginData.ID);
+            communicateManager.sendCommunicate(StateServer.CONNECTED.toString());
+            communicateManager.sendCommunicate(String.valueOf(loginData.ID));
 
+            this.userHomePath = usersDirPath + loginData.ID + loginData.pathClientArchive.replace('/', '\\');
+            this.fileManager = new FileManager(this.userHomePath);
+
+            String filesListJsonFromClient = communicateManager.receiveCommunicate();
+            ListClientsFiles comunicate = ConverterClassToJson.restoreFileInformation(filesListJsonFromClient);
+
+            List<FileInformation> localFiles = this.fileManager.getListOfFilesInformation();
+            List<FileInformation> neededChangesFiles = FileStatusComparator.compare(comunicate.filesInformation, localFiles);
+
+            Map<FileStatus, List<FileInformation>> separated = classifyActionOnGivenFile(neededChangesFiles);
+            List<FileInformation> listFilesToDelete = separated.get(FileStatus.DELETE);
+            neededChangesFiles = separated.get(FileStatus.SEND);
+
+            List<FileInformation> movedFile = searchMovedFiled(listFilesToDelete, neededChangesFiles);
+
+            FormaterTerminalText.printServerComunicate("\nZmiany dla serwera: ");
+            FormaterTerminalText.printNormal("\tPliki do przeniesienia: ");
+            printList(movedFile);
+            FormaterTerminalText.printNormal("\tPliki do usunięcia: ");
+            printList(listFilesToDelete);
+            deleteUnnecessaryFiles(listFilesToDelete);
+
+            comunicate.filesInformation = neededChangesFiles;
+            communicateManager.sendCommunicate(ConverterClassToJson.convert(comunicate));
+
+            if (!comunicate.filesInformation.isEmpty()) {
+                for (FileInformation fileInfo : neededChangesFiles) {
+                    TreeMap<Integer, FilePart> partsFile;
+                    try {
+                        partsFile = communicateManager.downloadPartsOfFile();
+                    } catch (SocketException | RuntimeException se) {
+                        FormaterTerminalText.printFailure("Połączenie z klientem zostało zerwane");
+                        cleanUP();
+                        return;
+                    }
+                    fileManager.saveFileFromParts(partsFile);
+                    System.gc();
+                }
+                fileManager.updateModificationDates(neededChangesFiles);
+                communicateManager.sendCommunicate(StateServer.DONE.toString());
+            }
+            communicateManager.sendCommunicate(String.valueOf(this.timeSync));
+            FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
+
+            String com = communicateManager.receiveCommunicate();
+            if(com == null || com.equals(StateServer.CONTINUE.toString())) {
+                this.isClientConnectef = false;
+            }
         }
-
-
-        communicateManager.sendCommunicate(String.valueOf(this.timeSync));
-        FormaterTerminalText.printServerComunicate("//////  Wymiana danych z klientem zakończona ////////////\n\n");
-
-        String com = communicateManager.receiveCommunicate();
-        if( com.equals(StateServer.CONTINUE.toString())) {
+        catch (LostConnectExeption | RuntimeException ls) {
             this.isClientConnectef = false;
         }
-
     }
 
     /**
@@ -222,7 +222,7 @@ public class UserHandling implements Runnable {
      * @param loginData dane logowania klienta
      * @throws NullPointerException jeśli dane logowania są błędne lub niekompletne
      */
-    private void logInUser(InitClientToServer loginData) throws NullPointerException {
+    private void logInUser(InitClientToServer loginData) throws NullPointerException, LostConnectExeption{
         String initJsonFromClient;
         while (!Manager_db.isCorrectUser(loginData.ID, loginData.pathClientArchive)) {
             if (loginData.ID == -1) {
