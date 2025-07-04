@@ -103,8 +103,8 @@ public class UserHandling implements Runnable {
                         cleanUP();
                         return;
                     }
-
                     fileManager.saveFileFromParts(partsFile);
+                    System.gc();
                 }
                 fileManager.updateModificationDates(neededChangesFiles);
                 communicateManager.sendCommunicate(StateServer.DONE.toString());

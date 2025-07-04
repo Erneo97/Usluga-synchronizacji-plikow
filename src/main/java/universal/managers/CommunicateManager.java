@@ -86,9 +86,11 @@ public class CommunicateManager {
                 byte[] dataCopy = Arrays.copyOf(buffer, bytesRead);
                 FilePart part = new FilePart(dataCopy, bytesRead, (int) fileSize, partNumber++, filePath);
                 oos.writeObject(part);
-                FormaterTerminalText.printprogressBar("Stan przesyłu: ", partNumber, (int)numberOfAllParts);
+                FormaterTerminalText.printprogressBar("Stan przesyłu "+ part.pathFile + ": ", partNumber+1, (int)numberOfAllParts-1);
+
+                System.gc();
             }
-            FormaterTerminalText.printprogressBar("Stan przesyłu: ", partNumber, (int)numberOfAllParts-1);
+
             if (!this.socket.isClosed())
                 oos.flush();
         } catch (SocketException e) {
